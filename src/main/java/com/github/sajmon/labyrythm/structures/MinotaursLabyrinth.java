@@ -16,7 +16,6 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 
 public class MinotaursLabyrinth extends LabyrythmStructure {
-    // Define codec for serialization with our specific parameters
     public static final MapCodec<MinotaursLabyrinth> CODEC = RecordCodecBuilder.mapCodec(
             instance -> instance.group(
                     settingsCodec(instance),
@@ -28,12 +27,11 @@ public class MinotaursLabyrinth extends LabyrythmStructure {
             ).apply(instance, MinotaursLabyrinth::new)
     );
 
-    // Private fields specific to MinotaursLabyrinth
     private final HolderSet<Biome> allowedBiomes;
     private final boolean doCheckHeight;
     private final boolean doAvoidWater;
     private final boolean doAvoidStructures;
-    private final int size; // Controls the size/complexity of the labyrinth
+    private final int size;
 
     public MinotaursLabyrinth(StructureSettings settings, HolderSet<Biome> allowedBiomes,
                               boolean doCheckHeight, boolean doAvoidWater,
@@ -48,40 +46,34 @@ public class MinotaursLabyrinth extends LabyrythmStructure {
 
     @Override
     public void generatePieces(StructurePiecesBuilder builder, GenerationContext context) {
-        // Get chunk position and create a BlockPos at the center
         ChunkPos chunkPos = context.chunkPos();
         BlockPos centerPos = new BlockPos(
                 (chunkPos.x << 4) + 7,
-                0, // Height will be determined later
+                0,
                 (chunkPos.z << 4) + 7
         );
 
-        // Get surface height at the center position
         int surfaceHeight = context.chunkGenerator().getBaseHeight(
                 centerPos.getX(),
                 centerPos.getZ(),
-                Heightmap.Types.WORLD_SURFACE_WG,  // Changed from int to Heightmap.Types
+                Heightmap.Types.WORLD_SURFACE_WG,
                 context.heightAccessor(),
                 context.randomState()
         );
 
-        // Update centerPos with the correct height
         centerPos = new BlockPos(centerPos.getX(), surfaceHeight, centerPos.getZ());
 
-        // Get random source from context
         RandomSource random = context.random();
 
-        // Choose a random rotation for the structure
         Rotation rotation = Rotation.getRandom(random);
 
-        // Create the main entrance piece and pass the template manager
         MinotaursLabyrinthPieces.addPieces(
                 builder,
                 centerPos,
                 rotation,
                 random,
                 this.size,
-                context.structureTemplateManager() // Pass the template manager from the context
+                context.structureTemplateManager()
         );
     }
 
