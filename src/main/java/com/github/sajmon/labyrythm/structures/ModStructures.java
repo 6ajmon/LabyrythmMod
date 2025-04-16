@@ -2,7 +2,6 @@ package com.github.sajmon.labyrythm.structures;
 
 import com.github.sajmon.labyrythm.Labyrythm;
 
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;

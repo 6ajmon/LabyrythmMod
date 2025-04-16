@@ -38,10 +38,11 @@ public class Labyrythm
         modEventBus.addListener(this::commonSetup);
 
         // Register ourselves for server and other game events we are interested in.
-        // Note that this is necessary if and only if we want *this* class (ExampleMod) to respond directly to events.
-        // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
-
+        
+        // IMPORTANT: Register the ModEvents CLASS instead of an instance
+        NeoForge.EVENT_BUS.register(com.github.sajmon.labyrythm.event.ModEvents.class);
+        
         // Register items
         ModItems.register(modEventBus);
         

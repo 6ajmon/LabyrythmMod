@@ -29,6 +29,8 @@ public class MinotaursLabyrinthPieces {
     private static final ResourceLocation CORNER = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_corner");
     private static final ResourceLocation TSHAPE = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_tshape");
     private static final ResourceLocation END = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end");
+    private static final ResourceLocation CROSS = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_cross");
+    private static final ResourceLocation END_HATCH = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_hatch");
 
     // The standard size of a single piece
     private static final int PIECE_SIZE = 7;
@@ -43,100 +45,163 @@ public class MinotaursLabyrinthPieces {
         PIECE_CONNECTIONS.put(CORNER, EnumSet.of(Direction.EAST, Direction.NORTH));
         PIECE_CONNECTIONS.put(TSHAPE, EnumSet.of(Direction.EAST, Direction.NORTH, Direction.SOUTH));
         PIECE_CONNECTIONS.put(END, EnumSet.of(Direction.EAST));
+        PIECE_CONNECTIONS.put(CROSS, EnumSet.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST));
+        PIECE_CONNECTIONS.put(END_HATCH, EnumSet.of(Direction.EAST)); // Tak samo jak END, ale z zejściem w dół
     }
 
     public static void addPieces(StructurePiecesBuilder builder, BlockPos centerPos, Rotation initialRotation,
                                  RandomSource random, int configSize, StructureTemplateManager templateManager) {
+        // Generate a random number of levels between 1 and 4
+        int levels = 1 + random.nextInt(3); // Random value from 1 to 4
+        
         // Define maze size (adjust based on the configSize parameter)
         int mazeSize = Math.max(5, (int)Math.sqrt(configSize));
         if (mazeSize % 2 == 0) mazeSize++; // Ensure odd size for centered entrance
         
-        // Create a 2D grid to represent our maze layout
-        MazeCell[][] mazeGrid = new MazeCell[mazeSize][mazeSize];
-        for (int z = 0; z < mazeSize; z++) {
-            for (int x = 0; x < mazeSize; x++) {
-                mazeGrid[z][x] = new MazeCell();
-            }
-        }
+        System.out.println("Generating labyrinth with " + levels + " levels and maze size " + mazeSize + "x" + mazeSize);
         
-        // Calculate center position for the entrance
-        int centerX = mazeSize / 2;
-        int centerZ = mazeSize / 2;
-        
-        // Generate the maze using randomized DFS
-        Set<GridPos> visited = new HashSet<>();
-        Map<GridPos, PieceInfo> pieceInfoMap = new HashMap<>();
-        
-        // Place the entrance at the center
-        GridPos entrancePos = new GridPos(centerX, centerZ);
-        visited.add(entrancePos);
-        pieceInfoMap.put(entrancePos, new PieceInfo(ENTRANCE, initialRotation));
-        
-        // Start DFS from the entrance
-        Stack<GridPos> stack = new Stack<>();
-        stack.push(entrancePos);
-        
-        // Four possible directions: North, East, South, West
-        Direction[] directions = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
-        
-        while (!stack.isEmpty()) {
-            GridPos current = stack.peek();
+        for (int level = 0; level < levels; level++) {
+            // Offset Y position for different levels
+            int yOffset = -level * 7; // Spacing between levels based on piece height
             
-            // Get unvisited neighbors
-            List<Direction> validDirections = new ArrayList<>();
-            for (Direction dir : directions) {
-                GridPos neighbor = current.offset(dir);
-                if (isValidPosition(neighbor, mazeSize) && !visited.contains(neighbor)) {
-                    validDirections.add(dir);
+            // Create a 2D grid to represent our maze layout
+            MazeCell[][] mazeGrid = new MazeCell[mazeSize][mazeSize];
+            for (int z = 0; z < mazeSize; z++) {
+                for (int x = 0; x < mazeSize; x++) {
+                    mazeGrid[z][x] = new MazeCell();
                 }
             }
             
-            if (!validDirections.isEmpty()) {
-                // Choose a random direction
-                Direction chosenDir = validDirections.get(random.nextInt(validDirections.size()));
-                GridPos next = current.offset(chosenDir);
-                
-                // Connect current cell with the next cell
-                connectCells(pieceInfoMap, current, next, chosenDir, random);
-                
-                // Mark as visited and push to stack
-                visited.add(next);
-                stack.push(next);
+            // Calculate center position for the entrance or for the position below the hatch
+            int centerX = mazeSize / 2;
+            int centerZ = mazeSize / 2;
+            
+            BlockPos levelCenterPos = new BlockPos(
+                centerPos.getX(),
+                centerPos.getY() + yOffset,
+                centerPos.getZ()
+            );
+            
+            // Generate the maze using randomized DFS
+            Set<GridPos> visited = new HashSet<>();
+            Map<GridPos, PieceInfo> pieceInfoMap = new HashMap<>();
+            
+            // Place the entrance based on level
+            GridPos entrancePos;
+            
+            if (level == 0) {
+                // For the first level, place entrance at the center
+                entrancePos = new GridPos(centerX, centerZ);
+                visited.add(entrancePos);
+                pieceInfoMap.put(entrancePos, new PieceInfo(ENTRANCE, initialRotation));
             } else {
-                // Backtrack
-                stack.pop();
+                // For other levels, we'll place the entrance below the hatch from the previous level
+                // The hatch position from previous level needs to be stored
+                GridPos hatchPos = level > 0 ? levelConnections.get(level-1) : null;
+                
+                if (hatchPos != null) {
+                    entrancePos = hatchPos;
+                    visited.add(entrancePos);
+                    pieceInfoMap.put(entrancePos, new PieceInfo(ENTRANCE, initialRotation));
+                } else {
+                    // Fallback if no hatch position exists
+                    entrancePos = new GridPos(centerX, centerZ);
+                    visited.add(entrancePos);
+                    pieceInfoMap.put(entrancePos, new PieceInfo(ENTRANCE, initialRotation));
+                }
+            }
+            
+            // Start DFS from the entrance
+            Stack<GridPos> stack = new Stack<>();
+            stack.push(entrancePos);
+            
+            // Four possible directions: North, East, South, West
+            Direction[] directions = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
+            
+            while (!stack.isEmpty()) {
+                GridPos current = stack.peek();
+                
+                // Get unvisited neighbors
+                List<Direction> validDirections = new ArrayList<>();
+                for (Direction dir : directions) {
+                    GridPos neighbor = current.offset(dir);
+                    if (isValidPosition(neighbor, mazeSize) && !visited.contains(neighbor)) {
+                        validDirections.add(dir);
+                    }
+                }
+                
+                if (!validDirections.isEmpty()) {
+                    // Choose a random direction
+                    Direction chosenDir = validDirections.get(random.nextInt(validDirections.size()));
+                    GridPos next = current.offset(chosenDir);
+                    
+                    // Connect current cell with the next cell
+                    connectCells(pieceInfoMap, current, next, chosenDir, random);
+                    
+                    // Mark as visited and push to stack
+                    visited.add(next);
+                    stack.push(next);
+                } else {
+                    // Backtrack
+                    stack.pop();
+                }
+            }
+            
+            // Znajdź jeden z końców labiryntu i zamień go na END_HATCH (tylko dla poziomów, które mają poziom poniżej)
+            if (level < levels - 1) {
+                List<GridPos> endPieces = new ArrayList<>();
+                for (Map.Entry<GridPos, PieceInfo> entry : pieceInfoMap.entrySet()) {
+                    if (entry.getValue().pieceType == END) {
+                        endPieces.add(entry.getKey());
+                    }
+                }
+                
+                if (!endPieces.isEmpty()) {
+                    // Wybierz losowy element END do zamiany
+                    GridPos hatchPos = endPieces.get(random.nextInt(endPieces.size()));
+                    PieceInfo endInfo = pieceInfoMap.get(hatchPos);
+                    
+                    // Zamień END na END_HATCH z zachowaniem rotacji
+                    pieceInfoMap.put(hatchPos, new PieceInfo(END_HATCH, endInfo.rotation));
+                    
+                    // Zapisz pozycję włazu do użycia dla następnego poziomu
+                    levelConnections.put(level, hatchPos);
+                }
+            }
+            
+            // Now place all the pieces in the world based on our maze layout
+            for (Map.Entry<GridPos, PieceInfo> entry : pieceInfoMap.entrySet()) {
+                GridPos gridPos = entry.getKey();
+                PieceInfo pieceInfo = entry.getValue();
+                
+                BlockPos piecePos = new BlockPos(
+                    levelCenterPos.getX() + ((gridPos.x - centerX) * PIECE_SIZE),
+                    levelCenterPos.getY(),
+                    levelCenterPos.getZ() + ((gridPos.z - centerZ) * PIECE_SIZE)
+                );
+                
+                System.out.println("Adding piece at: " + piecePos + " of type: " + pieceInfo.pieceType + 
+                                  " with rotation: " + pieceInfo.rotation + 
+                                  " for grid pos: " + gridPos.x + "," + gridPos.z +
+                                  " on level: " + level);
+                
+                // Create and add the structure piece
+                LabyrinthPiece piece = new LabyrinthPiece(
+                    templateManager,
+                    pieceInfo.pieceType,
+                    piecePos,
+                    pieceInfo.rotation,
+                    0 // No additional Y offset, already included in piecePos
+                );
+                
+                builder.addPiece(piece);
             }
         }
-        
-        // Now place all the pieces in the world based on our maze layout
-        for (Map.Entry<GridPos, PieceInfo> entry : pieceInfoMap.entrySet()) {
-            GridPos gridPos = entry.getKey();
-            PieceInfo pieceInfo = entry.getValue();
-            
-            // W metodzie addPieces
-            BlockPos piecePos = new BlockPos(
-                centerPos.getX() + ((gridPos.x - centerX) * PIECE_SIZE) - 3, // -3 to przykładowa korekta
-                centerPos.getY(),
-                centerPos.getZ() + ((gridPos.z - centerZ) * PIECE_SIZE) - 3  // -3 to przykładowa korekta
-            );
-            
-            System.out.println("Adding piece at: " + piecePos + " of type: " + pieceInfo.pieceType + 
-                               " with rotation: " + pieceInfo.rotation + 
-                               " for grid pos: " + gridPos.x + "," + gridPos.z);
-            
-            // Create and add the structure piece
-            LabyrinthPiece piece = new LabyrinthPiece(
-                templateManager,
-                pieceInfo.pieceType,
-                piecePos,
-                pieceInfo.rotation,
-                0 // No Y offset
-            );
-            
-            builder.addPiece(piece);
-        }
     }
-    
+
+    // Mapa przechowująca pozycje zejść między poziomami
+    private static final Map<Integer, GridPos> levelConnections = new HashMap<>();
+
     // Helper method to check if a position is within the maze bounds
     private static boolean isValidPosition(GridPos pos, int mazeSize) {
         return pos.x >= 0 && pos.x < mazeSize && pos.z >= 0 && pos.z < mazeSize;
@@ -188,8 +253,8 @@ public class MinotaursLabyrinthPieces {
         
         switch (connectionCount) {
             case 4:
-                // Four connections - entrance (or crossroads)
-                pieceType = ENTRANCE;
+                // Four connections - cross piece (lub entrance jeśli jest na początku)
+                pieceType = CROSS;
                 break;
                 
             case 3:
@@ -327,7 +392,7 @@ public class MinotaursLabyrinthPieces {
                     .setRotation(rotation)
                     .setMirror(Mirror.NONE)
                     .setRotationPivot(new BlockPos(3, 0, 3)) // Punkt obrotu w centrum elementu 7x7
-                    .addProcessor(BlockIgnoreProcessor.STRUCTURE_AND_AIR);
+                    .addProcessor(BlockIgnoreProcessor.STRUCTURE_BLOCK); // Zmienione z STRUCTURE_AND_AIR na STRUCTURE_BLOCK_ONLY
         }
 
         @Override
