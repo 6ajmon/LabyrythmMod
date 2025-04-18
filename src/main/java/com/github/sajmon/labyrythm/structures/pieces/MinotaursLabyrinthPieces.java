@@ -152,22 +152,39 @@ public class MinotaursLabyrinthPieces {
             
             // Add a hatch to the next level (except for the lowest level)
             if (level < levels - 1) {
-                List<GridPos> endPieces = new ArrayList<>();
+                List<GridPos> interiorEndPieces = new ArrayList<>();
+                List<GridPos> edgeEndPieces = new ArrayList<>();
+                
+                // Sort end pieces into interior and edge categories
                 for (Map.Entry<GridPos, PieceInfo> entry : pieceInfoMap.entrySet()) {
                     if (entry.getValue().pieceType == END) {
-                        endPieces.add(entry.getKey());
+                        GridPos pos = entry.getKey();
+                        if (isEdgePosition(pos, mazeSize)) {
+                            edgeEndPieces.add(pos);
+                        } else {
+                            interiorEndPieces.add(pos);
+                        }
                     }
                 }
                 
-                if (!endPieces.isEmpty()) {
-                    // Wybierz losowy element END do zamiany
-                    GridPos hatchPos = endPieces.get(random.nextInt(endPieces.size()));
+                GridPos hatchPos = null;
+                
+                // Prioritize interior pieces, fall back to edge pieces if necessary
+                if (!interiorEndPieces.isEmpty()) {
+                    hatchPos = interiorEndPieces.get(random.nextInt(interiorEndPieces.size()));
+                    System.out.println("Placed hatch at interior end piece");
+                } else if (!edgeEndPieces.isEmpty()) {
+                    hatchPos = edgeEndPieces.get(random.nextInt(edgeEndPieces.size()));
+                    System.out.println("No interior end pieces available, placed hatch at edge end piece");
+                }
+                
+                if (hatchPos != null) {
                     PieceInfo endInfo = pieceInfoMap.get(hatchPos);
                     
-                    // Zamień END na END_HATCH z zachowaniem rotacji
+                    // Replace END with END_HATCH maintaining the rotation
                     pieceInfoMap.put(hatchPos, new PieceInfo(END_HATCH, endInfo.rotation));
                     
-                    // Zapisz pozycję włazu do użycia dla następnego poziomu
+                    // Store hatch position for next level's entrance
                     levelConnections.put(level, hatchPos);
                 }
             }
@@ -228,6 +245,11 @@ public class MinotaursLabyrinthPieces {
     // Helper method to check if a position is within the maze bounds
     private static boolean isValidPosition(GridPos pos, int mazeSize) {
         return pos.x >= 0 && pos.x < mazeSize && pos.z >= 0 && pos.z < mazeSize;
+    }
+    
+    // Helper method to determine if a position is on the edge of the maze
+    private static boolean isEdgePosition(GridPos pos, int mazeSize) {
+        return pos.x == 0 || pos.x == mazeSize - 1 || pos.z == 0 || pos.z == mazeSize - 1;
     }
     
     // Helper method to connect two cells and assign appropriate piece types and rotations
