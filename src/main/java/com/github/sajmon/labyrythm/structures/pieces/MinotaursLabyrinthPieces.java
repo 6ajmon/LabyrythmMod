@@ -6,15 +6,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.TemplateStructurePiece;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
@@ -22,8 +19,6 @@ import net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilde
 import net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnoreProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.world.level.storage.loot.LootTable;
 
 import java.util.*;
 
@@ -35,11 +30,15 @@ public class MinotaursLabyrinthPieces {
     private static final ResourceLocation END = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end");
     private static final ResourceLocation CROSS = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_cross");
     private static final ResourceLocation END_HATCH = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_hatch");
-    private static final ResourceLocation END_CHEST = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_chest");
     private static final ResourceLocation BOSS_ROOM = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_boss_room");
-
+    private static final ResourceLocation END_CHEST_1 = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_chest_1");
+    private static final ResourceLocation END_CHEST_2 = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_chest_2");
+    private static final ResourceLocation END_CHEST_3 = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_chest_3");
+    
+    // The standard size of a single piece
     private static final int PIECE_SIZE = 7;
     
+    // Define connections for each piece type based on their default orientation
     private static final Map<ResourceLocation, Set<Direction>> PIECE_CONNECTIONS = new HashMap<>();
     
     static {
@@ -50,23 +49,26 @@ public class MinotaursLabyrinthPieces {
         PIECE_CONNECTIONS.put(END, EnumSet.of(Direction.EAST));
         PIECE_CONNECTIONS.put(CROSS, EnumSet.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST));
         PIECE_CONNECTIONS.put(END_HATCH, EnumSet.of(Direction.EAST));
-        PIECE_CONNECTIONS.put(END_CHEST, EnumSet.of(Direction.EAST));
-        PIECE_CONNECTIONS.put(BOSS_ROOM, EnumSet.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST));
+        PIECE_CONNECTIONS.put(BOSS_ROOM, EnumSet.of(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST));
+        PIECE_CONNECTIONS.put(END_CHEST_1, EnumSet.of(Direction.EAST));
+        PIECE_CONNECTIONS.put(END_CHEST_2, EnumSet.of(Direction.EAST));
+        PIECE_CONNECTIONS.put(END_CHEST_3, EnumSet.of(Direction.EAST));
     }
 
     public static void addPieces(StructurePiecesBuilder builder, BlockPos centerPos, Rotation initialRotation,
                                  RandomSource random, int configSize, StructureTemplateManager templateManager) {
+        // Generate a random number of levels between 1 and 4
         int levels = 2 + random.nextInt(3);
         
-        int mazeSize = Math.max(9, (int)Math.sqrt(configSize));
-        if (mazeSize % 2 == 0) mazeSize++;
-        
-        boolean bossRoomPlaced = false;
-        GridPos bossRoomPosition = null;
+        // Define maze size (adjust based on the configSize parameter)
+        int mazeSize = Math.max(5, (int)Math.sqrt(configSize));
+        if (mazeSize % 2 == 0) mazeSize++; // Ensure odd size for centered entrance
         
         for (int level = 0; level < levels; level++) {
+            // Offset Y position for different levels
             int yOffset = -level * 7;
             
+            // Create a 2D grid to represent our maze layout
             MazeCell[][] mazeGrid = new MazeCell[mazeSize][mazeSize];
             for (int z = 0; z < mazeSize; z++) {
                 for (int x = 0; x < mazeSize; x++) {
@@ -74,6 +76,7 @@ public class MinotaursLabyrinthPieces {
                 }
             }
             
+            // Calculate center position for the entrance or for the position below the hatch
             int centerX = mazeSize / 2;
             int centerZ = mazeSize / 2;
             
@@ -83,26 +86,20 @@ public class MinotaursLabyrinthPieces {
                 centerPos.getZ()
             );
             
+            // Generate the maze using randomized DFS
             Set<GridPos> visited = new HashSet<>();
             Map<GridPos, PieceInfo> pieceInfoMap = new HashMap<>();
             
+            // Place the entrance based on level
             GridPos entrancePos;
             
             if (level == 0) {
-                int minPos = 2;
-                int maxPos = mazeSize - 3;
-                
-                int entranceX = centerX + random.nextIntBetweenInclusive(-1, 1);
-                int entranceZ = centerZ + random.nextIntBetweenInclusive(-1, 1); 
-                
-                entranceX = Math.max(minPos, Math.min(maxPos, entranceX));
-                entranceZ = Math.max(minPos, Math.min(maxPos, entranceZ));
-                
-                entrancePos = new GridPos(entranceX, entranceZ);
-                
+                // For the first level, place entrance at the center
+                entrancePos = new GridPos(centerX, centerZ);
                 visited.add(entrancePos);
                 pieceInfoMap.put(entrancePos, new PieceInfo(ENTRANCE, initialRotation));
             } else {
+                // For other levels, we'll place the entrance below the hatch from the previous level
                 GridPos hatchPos = level > 0 ? levelConnections.get(level-1) : null;
                 
                 if (hatchPos != null) {
@@ -110,25 +107,24 @@ public class MinotaursLabyrinthPieces {
                     visited.add(entrancePos);
                     pieceInfoMap.put(entrancePos, new PieceInfo(ENTRANCE, initialRotation));
                 } else {
-                    int minPos = 2;
-                    int maxPos = mazeSize - 3;
-                    int entranceX = random.nextIntBetweenInclusive(minPos, maxPos);
-                    int entranceZ = random.nextIntBetweenInclusive(minPos, maxPos);
-                    
-                    entrancePos = new GridPos(entranceX, entranceZ);
+                    // Fallback if no hatch position exists
+                    entrancePos = new GridPos(centerX, centerZ);
                     visited.add(entrancePos);
                     pieceInfoMap.put(entrancePos, new PieceInfo(ENTRANCE, initialRotation));
                 }
             }
             
+            // Start DFS from the entrance
             Stack<GridPos> stack = new Stack<>();
             stack.push(entrancePos);
             
+            // Four possible directions: North, East, South, West
             Direction[] directions = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
             
             while (!stack.isEmpty()) {
                 GridPos current = stack.peek();
                 
+                // Get unvisited neighbors
                 List<Direction> validDirections = new ArrayList<>();
                 for (Direction dir : directions) {
                     GridPos neighbor = current.offset(dir);
@@ -138,154 +134,96 @@ public class MinotaursLabyrinthPieces {
                 }
                 
                 if (!validDirections.isEmpty()) {
+                    // Choose a random direction
                     Direction chosenDir = validDirections.get(random.nextInt(validDirections.size()));
                     GridPos next = current.offset(chosenDir);
                     
+                    // Connect current cell with the next cell
                     connectCells(pieceInfoMap, current, next, chosenDir, random);
                     
+                    // Mark as visited and push to stack
                     visited.add(next);
                     stack.push(next);
                 } else {
+                    // Backtrack
                     stack.pop();
                 }
             }
             
-            if (level == levels - 1 && !bossRoomPlaced) {
-                List<GridPos> suitablePositions = new ArrayList<>();
-                
-                int minInterior = 1;
-                int maxInterior = mazeSize - 2;
-                
-                for (Map.Entry<GridPos, PieceInfo> entry : pieceInfoMap.entrySet()) {
-                    GridPos pos = entry.getKey();
-                    ResourceLocation pieceType = entry.getValue().pieceType;
-                    
-                    if (pos.x > minInterior && pos.x < maxInterior && 
-                        pos.z > minInterior && pos.z < maxInterior) {
-                        
-                        if (pieceType == CROSS || pieceType == TSHAPE) {
-                            suitablePositions.add(pos);
-                            suitablePositions.add(pos);
-                        } else if (pieceType == STRAIGHT) {
-                            suitablePositions.add(pos);
-                        }
-                    }
-                }
-                
-                if (!suitablePositions.isEmpty()) {
-                    GridPos bossPos = suitablePositions.get(random.nextInt(suitablePositions.size()));
-                    PieceInfo originalInfo = pieceInfoMap.get(bossPos);
-                    pieceInfoMap.put(bossPos, new PieceInfo(BOSS_ROOM, originalInfo.rotation, level));
-                    bossRoomPlaced = true;
-                    bossRoomPosition = bossPos;
-                } else {
-                    List<GridPos> interiorPositions = new ArrayList<>();
-                    
-                    for (Map.Entry<GridPos, PieceInfo> entry : pieceInfoMap.entrySet()) {
-                        GridPos pos = entry.getKey();
-                        if (pos.x > minInterior && pos.x < maxInterior && 
-                            pos.z > minInterior && pos.z < maxInterior) {
-                            interiorPositions.add(pos);
-                        }
-                    }
-                    
-                    if (!interiorPositions.isEmpty()) {
-                        GridPos bossPos = interiorPositions.get(random.nextInt(interiorPositions.size()));
-                        PieceInfo originalInfo = pieceInfoMap.get(bossPos);
-                        pieceInfoMap.put(bossPos, new PieceInfo(BOSS_ROOM, originalInfo.rotation, level));
-                        bossRoomPlaced = true;
-                        bossRoomPosition = bossPos;
-                    } else {
-                        for (Map.Entry<GridPos, PieceInfo> entry : pieceInfoMap.entrySet()) {
-                            GridPos pos = entry.getKey();
-                            if (pos.x > 0 && pos.x < mazeSize - 1 && 
-                                pos.z > 0 && pos.z < mazeSize - 1) {
-                                PieceInfo originalInfo = pieceInfoMap.get(pos);
-                                pieceInfoMap.put(pos, new PieceInfo(BOSS_ROOM, originalInfo.rotation, level));
-                                bossRoomPlaced = true;
-                                bossRoomPosition = pos;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            
+            // Add a hatch to the next level (except for the lowest level)
             if (level < levels - 1) {
                 List<GridPos> interiorEndPieces = new ArrayList<>();
-                List<GridPos> fallbackEndPieces = new ArrayList<>();
+                List<GridPos> edgeEndPieces = new ArrayList<>();
                 
-                int minInterior = 2;
-                int maxInterior = mazeSize - 3;
-                
+                // Sort end pieces into interior and edge categories
                 for (Map.Entry<GridPos, PieceInfo> entry : pieceInfoMap.entrySet()) {
                     if (entry.getValue().pieceType == END) {
                         GridPos pos = entry.getKey();
-                        
-                        if (pos.x >= minInterior && pos.x <= maxInterior && 
-                            pos.z >= minInterior && pos.z <= maxInterior) {
+                        if (isEdgePosition(pos, mazeSize)) {
+                            edgeEndPieces.add(pos);
+                        } else {
                             interiorEndPieces.add(pos);
-                        } else if (pos.x > 0 && pos.x < mazeSize - 1 && 
-                                  pos.z > 0 && pos.z < mazeSize - 1) {
-                            fallbackEndPieces.add(pos);
                         }
                     }
                 }
                 
                 GridPos hatchPos = null;
                 
+                // Prioritize interior pieces, fall back to edge pieces if necessary
                 if (!interiorEndPieces.isEmpty()) {
                     hatchPos = interiorEndPieces.get(random.nextInt(interiorEndPieces.size()));
-                } else if (!fallbackEndPieces.isEmpty()) {
-                    hatchPos = fallbackEndPieces.get(random.nextInt(fallbackEndPieces.size()));
-                } else if (!pieceInfoMap.isEmpty()) {
-                    List<GridPos> allEndPieces = new ArrayList<>();
-                    for (Map.Entry<GridPos, PieceInfo> entry : pieceInfoMap.entrySet()) {
-                        if (entry.getValue().pieceType == END) {
-                            allEndPieces.add(entry.getKey());
-                        }
-                    }
-                    
-                    if (!allEndPieces.isEmpty()) {
-                        hatchPos = allEndPieces.get(random.nextInt(allEndPieces.size()));
-                    }
+                } else if (!edgeEndPieces.isEmpty()) {
+                    hatchPos = edgeEndPieces.get(random.nextInt(edgeEndPieces.size()));
                 }
                 
                 if (hatchPos != null) {
                     PieceInfo endInfo = pieceInfoMap.get(hatchPos);
                     
+                    // Replace END with END_HATCH maintaining the rotation
                     pieceInfoMap.put(hatchPos, new PieceInfo(END_HATCH, endInfo.rotation));
                     
+                    // Store hatch position for next level's entrance
                     levelConnections.put(level, hatchPos);
-                    
-                    List<GridPos> endPieces = new ArrayList<>();
-                    for (Map.Entry<GridPos, PieceInfo> entry : pieceInfoMap.entrySet()) {
-                        if (entry.getValue().pieceType == END && !entry.getKey().equals(hatchPos)) {
-                            endPieces.add(entry.getKey());
-                        }
-                    }
-                    
-                    for (GridPos endPos : endPieces) {
-                        if (random.nextFloat() < 0.25f) {
-                            pieceInfoMap.put(endPos, new PieceInfo(END_CHEST, pieceInfoMap.get(endPos).rotation, level));
-                        }
-                    }
                 }
-            } else {
-                List<GridPos> endPieces = new ArrayList<>();
-                for (Map.Entry<GridPos, PieceInfo> entry : pieceInfoMap.entrySet()) {
-                    if (entry.getValue().pieceType == END) {
-                        endPieces.add(entry.getKey());
-                    }
-                }
-                
-                for (GridPos endPos : endPieces) {
-                    if (random.nextFloat() < 0.5f) {
-                        pieceInfoMap.put(endPos, new PieceInfo(END_CHEST, pieceInfoMap.get(endPos).rotation, level));
+            }
+            
+            // Replace some end pieces with chest pieces
+            // Higher chance on the lowest level (50%) compared to upper levels (25%)
+            float chestChance = (level == levels - 1) ? 0.5f : 0.25f;
+            
+            for (Map.Entry<GridPos, PieceInfo> entry : new HashMap<>(pieceInfoMap).entrySet()) {
+                if (entry.getValue().pieceType == END) {
+                    // Roll random chance to replace with chest
+                    if (random.nextFloat() < chestChance) {
+                        PieceInfo endInfo = entry.getValue();
+                        
+                        // Select chest type based on level and weighted randomness
+                        ResourceLocation chestType = selectChestType(level, levels, random);
+                        
+                        pieceInfoMap.put(entry.getKey(), new PieceInfo(chestType, endInfo.rotation));
                     }
                 }
             }
             
+            // Replace center piece with boss room on the lowest level
+            if (level == levels - 1) {
+                GridPos centerGridPos = new GridPos(centerX, centerZ);
+                
+                // If there's a piece at the center, replace it with the boss room
+                if (pieceInfoMap.containsKey(centerGridPos)) {
+                    // Get connections from the existing piece to maintain the same pathways
+                    PieceInfo existingPiece = pieceInfoMap.get(centerGridPos);
+                    Set<Direction> connections = getRotatedConnections(
+                        PIECE_CONNECTIONS.get(existingPiece.pieceType), 
+                        existingPiece.rotation
+                    );
+                    
+                    // Create boss room with same rotation to maintain connections
+                    pieceInfoMap.put(centerGridPos, new PieceInfo(BOSS_ROOM, existingPiece.rotation));
+                }
+            }
+            
+            // Now place all the pieces in the world based on our maze layout
             for (Map.Entry<GridPos, PieceInfo> entry : pieceInfoMap.entrySet()) {
                 GridPos gridPos = entry.getKey();
                 PieceInfo pieceInfo = entry.getValue();
@@ -296,13 +234,13 @@ public class MinotaursLabyrinthPieces {
                     levelCenterPos.getZ() + ((gridPos.z - centerZ) * PIECE_SIZE)
                 );
                 
+                // Create and add the structure piece
                 LabyrinthPiece piece = new LabyrinthPiece(
                     templateManager,
                     pieceInfo.pieceType,
                     piecePos,
                     pieceInfo.rotation,
-                     0,
-                    level
+                    0 // No additional Y offset, already included in piecePos
                 );
                 
                 builder.addPiece(piece);
@@ -310,12 +248,20 @@ public class MinotaursLabyrinthPieces {
         }
     }
 
+    // Map storing connections between levels
     private static final Map<Integer, GridPos> levelConnections = new HashMap<>();
 
+    // Check if a position is within the maze bounds
     private static boolean isValidPosition(GridPos pos, int mazeSize) {
         return pos.x >= 0 && pos.x < mazeSize && pos.z >= 0 && pos.z < mazeSize;
     }
     
+    // Determine if a position is on the edge of the maze
+    private static boolean isEdgePosition(GridPos pos, int mazeSize) {
+        return pos.x == 0 || pos.x == mazeSize - 1 || pos.z == 0 || pos.z == mazeSize - 1;
+    }
+    
+    // Connect two cells and assign appropriate piece types and rotations
     private static void connectCells(Map<GridPos, PieceInfo> pieceInfoMap, GridPos current, GridPos next, Direction dir, RandomSource random) {
         PieceInfo currentInfo = pieceInfoMap.getOrDefault(current, null);
         Set<Direction> currentConnections = new HashSet<>();
@@ -337,6 +283,7 @@ public class MinotaursLabyrinthPieces {
         pieceInfoMap.put(next, nextInfo);
     }
     
+    // Apply rotation to a set of connections
     private static Set<Direction> getRotatedConnections(Set<Direction> connections, Rotation rotation) {
         Set<Direction> rotated = EnumSet.noneOf(Direction.class);
         for (Direction dir : connections) {
@@ -345,6 +292,7 @@ public class MinotaursLabyrinthPieces {
         return rotated;
     }
     
+    // Determine the appropriate piece type and rotation based on connections
     private static PieceInfo determinePieceTypeAndRotation(Set<Direction> connections) {
         int connectionCount = connections.size();
         ResourceLocation pieceType;
@@ -406,6 +354,35 @@ public class MinotaursLabyrinthPieces {
         return new PieceInfo(pieceType, rotation);
     }
     
+    // Select chest type based on level with weighted randomness
+    private static ResourceLocation selectChestType(int currentLevel, int totalLevels, RandomSource random) {
+        float roll = random.nextFloat();
+        
+        // Calculate how deep we are in the labyrinth (0.0 for top level, 1.0 for bottom level)
+        float depthFactor = (float)currentLevel / (totalLevels - 1);
+        
+        if (currentLevel == 0) { // Top level (first level)
+            if (roll < 0.80f) return END_CHEST_1;
+            else if (roll < 0.95f) return END_CHEST_2;
+            else return END_CHEST_3;
+        } 
+        else if (currentLevel == totalLevels - 1) { // Bottom level
+            if (roll < 0.0f) return END_CHEST_1;
+            else if (roll < 0.30f) return END_CHEST_2;
+            else return END_CHEST_3;
+        } 
+        else { // Middle levels
+            // Distribution scales based on depth
+            float chest1Chance = 0.45f - (0.45f * depthFactor * depthFactor);
+            float chest2Chance = 0.40f + (0.15f * depthFactor);
+            
+            if (roll < chest1Chance) return END_CHEST_1;
+            else if (roll < (chest1Chance + chest2Chance)) return END_CHEST_2;
+            else return END_CHEST_3;
+        }
+    }
+    
+    // 2D grid position representation
     private static class GridPos {
         final int x;
         final int z;
@@ -433,6 +410,7 @@ public class MinotaursLabyrinthPieces {
         }
     }
     
+    // Store maze cell information
     private static class MazeCell {
         private final Set<Direction> connections = EnumSet.noneOf(Direction.class);
         
@@ -445,43 +423,36 @@ public class MinotaursLabyrinthPieces {
         }
     }
     
+    // Hold piece type and rotation information
     private static class PieceInfo {
         final ResourceLocation pieceType;
         final Rotation rotation;
-        final int level;
         
         PieceInfo(ResourceLocation pieceType, Rotation rotation) {
-            this(pieceType, rotation, 0);
-        }
-        
-        PieceInfo(ResourceLocation pieceType, Rotation rotation, int level) {
             this.pieceType = pieceType;
             this.rotation = rotation;
-            this.level = level;
         }
     }
 
+    // Structure piece implementation
     public static class LabyrinthPiece extends TemplateStructurePiece {
-        private final int level;
 
         public LabyrinthPiece(StructureTemplateManager manager, ResourceLocation location,
-                              BlockPos pos, Rotation rotation, int yOffset, int level) {
+                              BlockPos pos, Rotation rotation, int yOffset) {
             super(ModStructurePieces.MINOTAUR_LABYRINTH_PIECE.get(), 0, manager, location,
-                    location.toString() + "_level_" + level, makeSettings(rotation), pos.offset(0, yOffset, 0));
-            this.level = level;
+                    location.toString(), makeSettings(rotation), pos.offset(0, yOffset, 0));
         }
 
         public LabyrinthPiece(StructurePieceSerializationContext context, CompoundTag tag) {
             super(ModStructurePieces.MINOTAUR_LABYRINTH_PIECE.get(), tag, context.structureTemplateManager(),
                     (location) -> makeSettings(Rotation.valueOf(tag.getString("Rotation"))));
-            this.level = tag.getInt("Level");
         }
 
         private static StructurePlaceSettings makeSettings(Rotation rotation) {
             return new StructurePlaceSettings()
                     .setRotation(rotation)
                     .setMirror(Mirror.NONE)
-                    .setRotationPivot(new BlockPos(3, 0, 3))
+                    .setRotationPivot(new BlockPos(3, 0, 3)) // Rotation pivot in center of 7x7 element
                     .addProcessor(BlockIgnoreProcessor.STRUCTURE_BLOCK);
         }
 
@@ -489,41 +460,12 @@ public class MinotaursLabyrinthPieces {
         protected void handleDataMarker(String marker, BlockPos pos, ServerLevelAccessor level,
                                         RandomSource random, BoundingBox box) {
             if (marker.startsWith("Chest")) {
-                Rotation pieceRotation = this.placeSettings.getRotation();
-                
-                Direction chestFacing = Direction.EAST;
-                
-                if (pieceRotation == Rotation.CLOCKWISE_90) {
-                    chestFacing = Direction.SOUTH;
-                } else if (pieceRotation == Rotation.CLOCKWISE_180) {
-                    chestFacing = Direction.WEST;
-                } else if (pieceRotation == Rotation.COUNTERCLOCKWISE_90) {
-                    chestFacing = Direction.NORTH;
-                }
-                
-                level.setBlock(pos, Blocks.CHEST.defaultBlockState()
-                        .setValue(ChestBlock.FACING, chestFacing), 2);
-                
+                level.setBlock(pos, Blocks.CHEST.defaultBlockState(), 2);
                 BlockEntity blockEntity = level.getBlockEntity(pos);
-                
-                if (blockEntity instanceof ChestBlockEntity chestBlockEntity) {
-                    int structureLevel = this.level;
-                    
-                    ResourceLocation lootTableLocation;
-                    if (structureLevel <= 0) {
-                        lootTableLocation = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "chests/labyrinth_basic");
-                    } else if (structureLevel == 1) {
-                        lootTableLocation = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "chests/labyrinth_uncommon");
-                    } else if (structureLevel == 2) {
-                        lootTableLocation = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "chests/labyrinth_rare");
-                    } else {
-                        lootTableLocation = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "chests/labyrinth_valuable");
-                    }
-                    
-                    ResourceKey<LootTable> lootTableKey = ResourceKey.create(Registries.LOOT_TABLE, lootTableLocation);
-                    
-                    chestBlockEntity.setLootTable(lootTableKey, random.nextLong());
-                }
+                // Set loot table
+            } else if (marker.startsWith("Spawner")) {
+                level.setBlock(pos, Blocks.SPAWNER.defaultBlockState(), 2);
+                // Configure spawner
             }
         }
 
@@ -531,7 +473,6 @@ public class MinotaursLabyrinthPieces {
         protected void addAdditionalSaveData(StructurePieceSerializationContext context, CompoundTag tag) {
             super.addAdditionalSaveData(context, tag);
             tag.putString("Rotation", this.placeSettings.getRotation().name());
-            tag.putInt("Level", this.level);
         }
     }
 }
