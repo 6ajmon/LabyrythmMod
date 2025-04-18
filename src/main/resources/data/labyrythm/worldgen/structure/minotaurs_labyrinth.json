@@ -2,7 +2,7 @@
   "type": "labyrythm:minotaurs_labyrinth",
   "biomes": "#labyrythm:has_structure/minotaurs_labyrinth",
   "step": "surface_structures",
-  "terrain_adaptation": "beard_thin",
+  "terrain_adaptation": "none",
   "spawn_overrides": {},
   "allowed_biomes": "#labyrythm:has_structure/minotaurs_labyrinth",
   "check_height": true,
