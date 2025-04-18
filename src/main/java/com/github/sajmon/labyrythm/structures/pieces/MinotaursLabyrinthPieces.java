@@ -32,6 +32,7 @@ public class MinotaursLabyrinthPieces {
     private static final ResourceLocation CROSS = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_cross");
     private static final ResourceLocation END_HATCH = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_hatch");
     private static final ResourceLocation BOSS_ROOM = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_boss_room");
+    private static final ResourceLocation END_CHEST = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_chest");
     
 
     // The standard size of a single piece
@@ -48,8 +49,9 @@ public class MinotaursLabyrinthPieces {
         PIECE_CONNECTIONS.put(TSHAPE, EnumSet.of(Direction.EAST, Direction.NORTH, Direction.SOUTH));
         PIECE_CONNECTIONS.put(END, EnumSet.of(Direction.EAST));
         PIECE_CONNECTIONS.put(CROSS, EnumSet.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST));
-        PIECE_CONNECTIONS.put(END_HATCH, EnumSet.of(Direction.EAST)); // Tak samo jak END, ale z zejściem w dół
+        PIECE_CONNECTIONS.put(END_HATCH, EnumSet.of(Direction.EAST)); // Same as END, but with a hatch down
         PIECE_CONNECTIONS.put(BOSS_ROOM, EnumSet.of(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)); // Boss room connects in all directions
+        PIECE_CONNECTIONS.put(END_CHEST, EnumSet.of(Direction.EAST)); // Same as END, but with a treasure chest
     }
 
     public static void addPieces(StructurePiecesBuilder builder, BlockPos centerPos, Rotation initialRotation,
@@ -186,6 +188,21 @@ public class MinotaursLabyrinthPieces {
                     
                     // Store hatch position for next level's entrance
                     levelConnections.put(level, hatchPos);
+                }
+            }
+            
+            // Replace some end pieces with chest pieces
+            // Higher chance on the lowest level (50%) compared to upper levels (25%)
+            float chestChance = (level == levels - 1) ? 0.5f : 0.25f;
+            
+            for (Map.Entry<GridPos, PieceInfo> entry : new HashMap<>(pieceInfoMap).entrySet()) {
+                if (entry.getValue().pieceType == END) {
+                    // Roll random chance to replace with chest
+                    if (random.nextFloat() < chestChance) {
+                        PieceInfo endInfo = entry.getValue();
+                        pieceInfoMap.put(entry.getKey(), new PieceInfo(END_CHEST, endInfo.rotation));
+                        System.out.println("Placed chest at end piece on level " + level);
+                    }
                 }
             }
             
