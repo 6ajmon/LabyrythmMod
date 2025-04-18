@@ -32,7 +32,10 @@ public class MinotaursLabyrinthPieces {
     private static final ResourceLocation CROSS = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_cross");
     private static final ResourceLocation END_HATCH = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_hatch");
     private static final ResourceLocation BOSS_ROOM = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_boss_room");
-    private static final ResourceLocation END_CHEST = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_chest");
+    // Replace single END_CHEST with three different quality chest pieces
+    private static final ResourceLocation END_CHEST_1 = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_chest_1");
+    private static final ResourceLocation END_CHEST_2 = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_chest_2");
+    private static final ResourceLocation END_CHEST_3 = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_chest_3");
     
 
     // The standard size of a single piece
@@ -51,7 +54,10 @@ public class MinotaursLabyrinthPieces {
         PIECE_CONNECTIONS.put(CROSS, EnumSet.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST));
         PIECE_CONNECTIONS.put(END_HATCH, EnumSet.of(Direction.EAST)); // Same as END, but with a hatch down
         PIECE_CONNECTIONS.put(BOSS_ROOM, EnumSet.of(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)); // Boss room connects in all directions
-        PIECE_CONNECTIONS.put(END_CHEST, EnumSet.of(Direction.EAST)); // Same as END, but with a treasure chest
+        // Add connection data for all three chest pieces
+        PIECE_CONNECTIONS.put(END_CHEST_1, EnumSet.of(Direction.EAST)); // Basic loot chest
+        PIECE_CONNECTIONS.put(END_CHEST_2, EnumSet.of(Direction.EAST)); // Better loot chest
+        PIECE_CONNECTIONS.put(END_CHEST_3, EnumSet.of(Direction.EAST)); // Best loot chest
     }
 
     public static void addPieces(StructurePiecesBuilder builder, BlockPos centerPos, Rotation initialRotation,
@@ -200,8 +206,12 @@ public class MinotaursLabyrinthPieces {
                     // Roll random chance to replace with chest
                     if (random.nextFloat() < chestChance) {
                         PieceInfo endInfo = entry.getValue();
-                        pieceInfoMap.put(entry.getKey(), new PieceInfo(END_CHEST, endInfo.rotation));
-                        System.out.println("Placed chest at end piece on level " + level);
+                        
+                        // Select chest type based on level and weighted randomness
+                        ResourceLocation chestType = selectChestType(level, levels, random);
+                        
+                        pieceInfoMap.put(entry.getKey(), new PieceInfo(chestType, endInfo.rotation));
+                        System.out.println("Placed chest " + chestType.getPath() + " at end piece on level " + level);
                     }
                 }
             }
@@ -381,6 +391,37 @@ public class MinotaursLabyrinthPieces {
         }
         
         return new PieceInfo(pieceType, rotation);
+    }
+    
+    // Helper method to select chest type based on level with weighted randomness
+    private static ResourceLocation selectChestType(int currentLevel, int totalLevels, RandomSource random) {
+        float roll = random.nextFloat();
+        
+        // Calculate how deep we are in the labyrinth (0.0 for top level, 1.0 for bottom level)
+        float depthFactor = (float)currentLevel / (totalLevels - 1);
+        
+        if (currentLevel == 0) { // Top level (first level)
+            // 70% chance for basic chest, 25% for medium, 5% for best
+            if (roll < 0.70f) return END_CHEST_1;
+            else if (roll < 0.95f) return END_CHEST_2;
+            else return END_CHEST_3;
+        } 
+        else if (currentLevel == totalLevels - 1) { // Bottom level
+            // 10% chance for basic chest, 30% for medium, 60% for best
+            if (roll < 0.10f) return END_CHEST_1;
+            else if (roll < 0.40f) return END_CHEST_2;
+            else return END_CHEST_3;
+        } 
+        else { // Middle levels
+            // Distribution scales based on depth
+            float chest1Chance = 0.70f - (0.60f * depthFactor); // Decreases with depth
+            float chest2Chance = 0.25f + (0.05f * depthFactor); // Slightly increases
+            // chest3Chance increases from 5% to 60% as we go deeper
+            
+            if (roll < chest1Chance) return END_CHEST_1;
+            else if (roll < (chest1Chance + chest2Chance)) return END_CHEST_2;
+            else return END_CHEST_3;
+        }
     }
     
     // Simple class to represent a 2D grid position
