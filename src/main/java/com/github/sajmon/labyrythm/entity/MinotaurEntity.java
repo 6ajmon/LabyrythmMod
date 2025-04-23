@@ -108,6 +108,9 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     private static final int MAX_ATTACK_TIME = 15;
     private boolean attackAnimationStarted = false;
 
+    private int regenerationTicks = 0;
+    private static final int REGENERATION_INTERVAL = 20; // 1 second (20 ticks)
+
     public MinotaurEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 20;
@@ -169,6 +172,17 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
         super.tick();
 
         Level level = this.level();
+
+        // Natural regeneration (1 HP per second)
+        if (!level.isClientSide() && this.isAlive()) {
+            regenerationTicks++;
+            if (regenerationTicks >= REGENERATION_INTERVAL) {
+                regenerationTicks = 0;
+                if (this.getHealth() < this.getMaxHealth()) {
+                    this.heal(1.0F);
+                }
+            }
+        }
 
         int attackTime = getAttackTime();
         if (attackTime > 0) {
@@ -380,6 +394,13 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
+        if (source.is(net.minecraft.world.damagesource.DamageTypes.DROWN) ||
+            source.is(net.minecraft.world.damagesource.DamageTypes.IN_FIRE) ||
+            source.is(net.minecraft.world.damagesource.DamageTypes.ON_FIRE) ||
+            source.is(net.minecraft.world.damagesource.DamageTypes.LAVA)) {
+            return false; // Explicitly reject drowning, fire, and lava damage
+        }
+
         boolean result = super.hurt(source, amount);
 
         if (result && source.getEntity() instanceof LivingEntity attacker) {
@@ -650,6 +671,21 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     @Override
     public boolean canPickUpLoot() {
         return false;
+    }
+
+    @Override
+    protected int decreaseAirSupply(int currentAir) {
+        return currentAir; // Don't decrease air when underwater
+    }
+
+    @Override
+    public boolean fireImmune() {
+        return true; // Make the Minotaur immune to fire
+    }
+
+    @Override
+    public boolean displayFireAnimation() {
+        return false; // Don't show fire animation even if in fire
     }
 
     private static class MinotaurVibrationUser implements VibrationSystem.User {
