@@ -8,6 +8,7 @@ import com.github.sajmon.labyrythm.structures.ModStructures;
 import com.github.sajmon.labyrythm.structures.pieces.ModStructurePieces;
 import com.github.sajmon.labyrythm.entity.ModEntityTypes;
 import com.github.sajmon.labyrythm.entity.MinotaurEntity;
+import com.github.sajmon.labyrythm.entity.ModActivities;
 
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.api.distmarker.Dist;
@@ -34,7 +35,6 @@ public class Labyrythm
     {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::addCreative);
-        // Add this line to register your attribute event handler:
         modEventBus.addListener(this::registerAttributes);
 
         // Keep this for game events (like ServerStartingEvent)
@@ -45,7 +45,8 @@ public class Labyrythm
         ModStructures.register(modEventBus);
         ModStructurePieces.register(modEventBus);
         ModEntityTypes.register(modEventBus);
-
+        ModActivities.register(modEventBus); // Add this line
+        
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 

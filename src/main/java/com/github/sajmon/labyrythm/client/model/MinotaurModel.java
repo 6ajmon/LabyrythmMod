@@ -125,9 +125,8 @@ public class MinotaurModel<T extends MinotaurEntity> extends EntityModel<T> {
         this.rightLeg.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
         this.leftLeg.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
         
-        // You can add more animations based on entity state
-        // For example, attack animation when entity is attacking
-        if (entity.isAngryAt(null)) {
+        // Replace the problematic isAngryAt(null) check with a safer alternative
+        if (entity.isAggressive() || entity.getRemainingPersistentAngerTime() > 0) {
             // Make arms more aggressive
             float attackProgress = entity.getAttackAnim(ageInTicks);
             if (attackProgress > 0) {
