@@ -84,7 +84,6 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState walkAnimationState = new AnimationState();
     public final AnimationState dashAnimationState = new AnimationState();
-    public final AnimationState listenAnimationState = new AnimationState();
     public final AnimationState attackAnimationState = new AnimationState();
 
     private int dashCooldownTicks = 0;
@@ -109,7 +108,7 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     private boolean attackAnimationStarted = false;
 
     private int regenerationTicks = 0;
-    private static final int REGENERATION_INTERVAL = 20; // 1 second (20 ticks)
+    private static final int REGENERATION_INTERVAL = 20;
 
     public MinotaurEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -128,10 +127,6 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
         builder.define(IS_DASHING, false);
         builder.define(IS_CHASING, false);
         builder.define(ATTACK_TIME, 0);
-    }
-
-    @Override
-    protected void registerGoals() {
     }
 
     @Override
