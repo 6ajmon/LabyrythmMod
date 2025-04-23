@@ -659,7 +659,8 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
                 .add(Attributes.ARMOR, 6.0D)
                 .add(Attributes.ARMOR_TOUGHNESS, 6.0D)
                 .add(Attributes.SCALE, 1.24D)
-                .add(Attributes.JUMP_STRENGTH, 2.0D);
+                .add(Attributes.JUMP_STRENGTH, 2.0D)
+                .add(Attributes.STEP_HEIGHT, 1.0D);
     }
 
     @Override
