@@ -42,7 +42,29 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     private static final EntityDataAccessor<Integer> ANGER_LEVEL = SynchedEntityData.defineId(MinotaurEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> IS_DASHING = SynchedEntityData.defineId(MinotaurEntity.class, EntityDataSerializers.BOOLEAN);
     
-    private static final int VIBRATION_DETECTION_RANGE = 48;
+    // ===== CENTRALIZED MOVEMENT SPEED VALUES =====
+    // Base movement attribute
+    public static final double BASE_MOVEMENT_SPEED = 0.25D;
+    
+    // Speed multipliers for different activities
+    public static final float PATROL_SPEED_MULTIPLIER = 1.5f;     // Normal walking speed
+    public static final float INVESTIGATE_SPEED_MULTIPLIER = 1.5f; // Normal when investigating
+    public static final float CHASE_SPEED_MULTIPLIER = 1.625f;      // Faster when chasing
+    
+    // AI walk target speeds (for behavior controls)
+    public static final float PATROL_WALK_SPEED = 1.3F;           // For random patrol
+    public static final float INVESTIGATE_WALK_SPEED = 1.3F;      // For investigation targets
+    public static final float CHASE_WALK_SPEED = 1.6F;            // For pursuing targets
+    
+    // ===== DASH ATTACK SETTINGS =====
+    public static final double DASH_FORCE = 2.5D;                // Dash momentum power
+    public static final int DASH_DURATION_TICKS = 20;            // How long dash lasts
+    public static final int DASH_COOLDOWN_TICKS = 240;           // Cooldown between dashes (12 seconds)
+    
+    // ===== DETECTION SETTINGS =====
+    public static final int VIBRATION_DETECTION_RANGE = 32;      // How far minotaur detects sounds
+    private static final int MAX_TRACKING_TICKS = 200;           // Sound memory duration (10 seconds)
+    private static final int VIBRATION_MEMORY_DURATION = 400;    // Target memory duration (20 seconds)
     
     // Vibration system components
     private final DynamicGameEventListener<VibrationSystem.Listener> dynamicGameEventListener = new DynamicGameEventListener<>(new VibrationSystem.Listener(this));
@@ -60,10 +82,7 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     public final AnimationState listenAnimationState = new AnimationState();
     public final AnimationState attackAnimationState = new AnimationState();
     
-    // Dash attack properties
-    private static final int DASH_COOLDOWN = 60; // 3 seconds
-    private static final int DASH_DURATION = 20; // 1 second
-    private static final double DASH_SPEED = 1.5;
+    // Dash state tracking
     private int dashCooldownTicks = 0;
     private int dashDurationTicks = 0;
     
@@ -71,12 +90,10 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     private final Map<UUID, Boolean> hasHeardEntity = new HashMap<>();
     private BlockPos lastSoundPosition = null;
     private int soundTrackingTicks = 0;
-    private static final int MAX_TRACKING_TICKS = 200; // 10 seconds
 
     // Vibration detection memory
     private boolean targetDetectedByVibration = false;
     private int vibrationDetectionCooldown = 0;
-    private static final int VIBRATION_MEMORY_DURATION = 400; // 20 seconds
 
     public MinotaurEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -134,22 +151,46 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
         
         Level level = this.level();
         
-        // Add this near the beginning of your tick method
-        if (!level.isClientSide() && tickCount % 100 == 0) {
+        // Add target death check to reset behavior after a kill
+        if (!level.isClientSide() && this.getTarget() != null && !this.getTarget().isAlive()) {
+            // Target was killed, reset and go back to patrolling
+            this.setTarget(null);
+            this.getBrain().eraseMemory(MemoryModuleType.ATTACK_TARGET);
+            this.targetDetectedByVibration = false;
+            this.lastSoundPosition = null;
+            
+            // Force patrol activity
+            this.getBrain().setActiveActivityIfPossible(ModActivities.PATROL.get());
+            
+            // Generate a new patrol point immediately
+            RandomSource random = this.getRandom();
+            int x = Mth.randomBetweenInclusive(random, -16, 16);
+            int y = Mth.randomBetweenInclusive(random, -2, 2);
+            int z = Mth.randomBetweenInclusive(random, -16, 16);
+            
+            BlockPos targetPos = this.blockPosition().offset(x, y, z);
+            
+            // Force direct navigation with REDUCED speed
+            this.getNavigation().moveTo(targetPos.getX(), targetPos.getY(), targetPos.getZ(), 1.0); // REDUCED from 1.4
+            System.out.println("Target killed, resuming patrol to: " + targetPos.toShortString());
+        }
+        
+        // Change the patrol forcing frequency in your tick method from 100 to 80
+        if (!level.isClientSide() && tickCount % 80 == 0) {  // DECREASED from 100 to 80 - patrol more often
             // If we're not doing anything interesting, force patrol behavior
             if (this.getTarget() == null && this.lastSoundPosition == null && 
                 !this.getNavigation().isInProgress()) {
                 
                 // Generate random patrol point
                 RandomSource random = this.getRandom();
-                int x = Mth.randomBetweenInclusive(random, -16, 16);
+                int x = Mth.randomBetweenInclusive(random, -20, 20);  // INCREASED from -16,16
                 int y = Mth.randomBetweenInclusive(random, -2, 2);
-                int z = Mth.randomBetweenInclusive(random, -16, 16);
+                int z = Mth.randomBetweenInclusive(random, -20, 20);  // INCREASED from -16,16
                 
                 BlockPos targetPos = this.blockPosition().offset(x, y, z);
                 
-                // Force navigation to this point
-                this.getNavigation().moveTo(targetPos.getX(), targetPos.getY(), targetPos.getZ(), 1.0);
+                // Force navigation to this point with REDUCED speed
+                this.getNavigation().moveTo(targetPos.getX(), targetPos.getY(), targetPos.getZ(), 1.0); // REDUCED from 1.4
                 System.out.println("Forcing patrol to: " + targetPos.toShortString());
             }
         }
@@ -277,8 +318,6 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
             }
         }
         
-        // Add this near the beginning of your tick method, after all your other code
-        
         // Modify movement speed based on activity
         if (!level.isClientSide()) {
             Optional<Activity> currentActivity = this.getBrain().getActiveNonCoreActivity();
@@ -287,19 +326,16 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
                 Activity activity = currentActivity.get();
                 
                 // Speed multipliers
-                float speedMultiplier = 1.0f;
+                float speedMultiplier = PATROL_SPEED_MULTIPLIER; // Default to patrol speed
                 
                 if (activity == ModActivities.CHASE.get()) {
-                    // Run very fast when chasing
-                    speedMultiplier = 1.8f;
-                } else if (activity == ModActivities.PATROL.get() || 
-                          activity == ModActivities.INVESTIGATE.get()) {
-                    // Move faster than normal when patrolling or investigating
-                    speedMultiplier = 1.3f;
+                    speedMultiplier = CHASE_SPEED_MULTIPLIER;
+                } else if (activity == ModActivities.INVESTIGATE.get()) {
+                    speedMultiplier = INVESTIGATE_SPEED_MULTIPLIER;
                 }
                 
                 // Apply speed multiplier by setting attribute modifier
-                this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.3D * speedMultiplier);
+                this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(BASE_MOVEMENT_SPEED * speedMultiplier);
             }
         }
         
@@ -406,14 +442,14 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
         if (!this.canDash()) return;
         
         this.setDashing(true);
-        this.dashDurationTicks = DASH_DURATION;
-        this.dashCooldownTicks = DASH_COOLDOWN;
+        this.dashDurationTicks = DASH_DURATION_TICKS;
+        this.dashCooldownTicks = DASH_COOLDOWN_TICKS;
         
         // Set velocity in dash direction
         Vec3 normalizedDir = direction.normalize();
-        this.setDeltaMovement(normalizedDir.x * DASH_SPEED, 
+        this.setDeltaMovement(normalizedDir.x * DASH_FORCE, 
                              this.onGround() ? 0.1 : this.getDeltaMovement().y, 
-                             normalizedDir.z * DASH_SPEED);
+                             normalizedDir.z * DASH_FORCE);
         
         // Play sound
         this.playSound(SoundEvents.WARDEN_SONIC_BOOM, 3.0F, 0.5F);
@@ -435,14 +471,12 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
             dx = dx / length;
             dz = dz / length;
             
-            double dashForce = 2.5;
+            // Apply dash momentum using the constant
+            this.setDeltaMovement(dx * DASH_FORCE, 0.1, dz * DASH_FORCE);
             
-            // Apply dash momentum
-            this.setDeltaMovement(dx * dashForce, 0.1, dz * dashForce);
-            
-            this.dashDurationTicks = 20;  // Slightly longer dash duration
-            
-            this.dashCooldownTicks = 240;
+            // Use the same constants for both methods
+            this.dashDurationTicks = DASH_DURATION_TICKS;
+            this.dashCooldownTicks = DASH_COOLDOWN_TICKS;
             
             // Play dash sound
             this.playSound(SoundEvents.PHANTOM_SWOOP, 2.0F, 1.0F);
@@ -561,7 +595,7 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 80.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.3D)
+                .add(Attributes.MOVEMENT_SPEED, BASE_MOVEMENT_SPEED) // Use the constant
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.9D)
                 .add(Attributes.ATTACK_DAMAGE, 12.0D)
                 .add(Attributes.ATTACK_KNOCKBACK, 2.0D)
@@ -605,7 +639,7 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
                 } else {
                     // For player-made sounds where the player isn't directly detected
                     this.minotaur.getBrain().setMemoryWithExpiry(MemoryModuleType.WALK_TARGET, 
-                                                               new WalkTarget(pos, 1.0F, 1), 
+                                                               new WalkTarget(pos, INVESTIGATE_WALK_SPEED, 1), 
                                                                200);
                 }
             }

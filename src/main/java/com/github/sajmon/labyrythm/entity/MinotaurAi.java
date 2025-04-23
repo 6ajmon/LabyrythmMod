@@ -20,6 +20,11 @@ import java.util.List;
 import java.util.Optional;
 
 public class MinotaurAi {
+    // Import speed constants from MinotaurEntity - add reference to them here
+    private static final float PATROL_WALK_SPEED = MinotaurEntity.PATROL_WALK_SPEED;
+    private static final float INVESTIGATE_WALK_SPEED = MinotaurEntity.INVESTIGATE_WALK_SPEED;
+    private static final float CHASE_WALK_SPEED = MinotaurEntity.CHASE_WALK_SPEED;
+
     private static final List<MemoryModuleType<?>> MEMORY_TYPES = List.of(
             MemoryModuleType.PATH,
             MemoryModuleType.WALK_TARGET,
@@ -133,31 +138,28 @@ public class MinotaurAi {
     private static void initPatrolActivity(Brain<MinotaurEntity> brain) {
         brain.addActivity(PATROL, ImmutableList.of(
             Pair.of(0, new RunOne<>(ImmutableList.of(
-                // Increased weights for movement behaviors
-                Pair.of(RandomStroll.swim(1.3F), 3),          // INCREASED from 1.0F to 1.3F
-                Pair.of(RandomStroll.stroll(1.5F), 5),        // INCREASED from 1.2F to 1.5F
-                Pair.of(createRandomPatrolGoal(), 10),        // Will update this method too
-                // Reduced weight and duration for idle behavior
-                Pair.of(new DoNothing(10, 30), 1)
+                // REDUCED movement speeds
+                Pair.of(RandomStroll.swim(1.2F), 3),          // REDUCED from 1.5F
+                Pair.of(RandomStroll.stroll(1.3F), 6),        // REDUCED from 1.7F
+                Pair.of(createRandomPatrolGoal(), 12),       
+                Pair.of(new DoNothing(5, 15), 1)             
             )))
         ));
     }
     
     private static void initInvestigateActivity(Brain<MinotaurEntity> brain) {
         brain.addActivity(INVESTIGATE, ImmutableList.of(
-            // First set the target (priority 0)
             Pair.of(0, createInvestigateSoundGoal()), 
-            // Then use the MoveToTargetSink with higher priority (1) - INCREASED speed from normal
             Pair.of(1, new MoveToTargetSink(20, 40)),
-            // These are fallbacks with lower priority - INCREASED from 1.2F to 1.6F
-            Pair.of(2, SetWalkTargetFromLookTarget.create(1.6F, 2))
+            // Use the investigate walk speed constant
+            Pair.of(2, SetWalkTargetFromLookTarget.create(INVESTIGATE_WALK_SPEED, 2))
         ));
     }
     
     private static void initChaseActivity(Brain<MinotaurEntity> brain) {
         brain.addActivity(CHASE, ImmutableList.of(
-            // This behavior handles approaching the target - SIGNIFICANTLY INCREASED from 1.0F to 2.2F
-            Pair.of(0, SetWalkTargetFromAttackTargetIfTargetOutOfReach.create(2.2F)),
+            // Use the chase walk speed constant
+            Pair.of(0, SetWalkTargetFromAttackTargetIfTargetOutOfReach.create(CHASE_WALK_SPEED)),
             Pair.of(1, createDashAttackGoal())
         ));
     }
@@ -180,17 +182,17 @@ public class MinotaurAi {
                     RandomSource random = entity.getRandom();
                     
                     // More reasonable patrol range (not so far)
-                    int x = Mth.randomBetweenInclusive(random, -16, 16);
-                    int y = Mth.randomBetweenInclusive(random, -2, 2); // Less vertical movement
-                    int z = Mth.randomBetweenInclusive(random, -16, 16);
+                    int x = Mth.randomBetweenInclusive(random, -20, 20);  // INCREASED from -16,16
+                    int y = Mth.randomBetweenInclusive(random, -2, 2);
+                    int z = Mth.randomBetweenInclusive(random, -20, 20);  // INCREASED from -16,16
                     
                     BlockPos targetPos = entity.blockPosition().offset(x, y, z);
                     
-                    // INCREASED speed from 1.2F to 1.5F
-                    WalkTarget target = new WalkTarget(targetPos, 1.5F, 1);
+                    // Use the constant for walk speed
+                    WalkTarget target = new WalkTarget(targetPos, PATROL_WALK_SPEED, 1);
                     
-                    // Set memory with expiry here instead - 40 ticks expiry
-                    entity.getBrain().setMemoryWithExpiry(MemoryModuleType.WALK_TARGET, target, 40);
+                    // DECREASED expiry from 40 to 30 ticks - change patrol points more often
+                    entity.getBrain().setMemoryWithExpiry(MemoryModuleType.WALK_TARGET, target, 30);
                     
                     // Debug info
                     if (random.nextInt(10) == 0) { // Reduce debug spam
