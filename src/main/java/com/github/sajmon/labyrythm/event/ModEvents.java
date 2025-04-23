@@ -10,21 +10,16 @@ import net.neoforged.bus.api.SubscribeEvent;
 
 public class ModEvents {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static int tickCounter = 0;
     
     @SubscribeEvent
     public static void onPlayerTick(PlayerEvent.BreakSpeed event) {
         Entity entity = event.getEntity();
         
-        tickCounter++;
-        boolean shouldLog = tickCounter % 100 == 0;
-        
         if (entity instanceof ServerPlayer player && !player.level().isClientSide()) {
             try {
                 LabyrinthEffectsManager.checkPlayerInLabyrinth(player, player.serverLevel());
             } catch (Exception e) {
-                LOGGER.error("Error checking if player is in labyrinth: {}", e.getMessage());
-                e.printStackTrace();
+                // Silently fail
             }
         }
     }

@@ -4,12 +4,12 @@ import com.github.sajmon.labyrythm.Labyrythm;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.Mth;
-import org.slf4j.Logger;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -21,14 +21,10 @@ public class AnimationLoader {
     private static final Map<String, AnimationData> animations = new HashMap<>();
     private static boolean loaded = false;
 
-    /**
-     * Load animations from a JSON resource file
-     */
     public static void loadAnimations(ResourceLocation location) {
         try {
             Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
             if (resource.isEmpty()) {
-                LOGGER.error("Could not find animation resource: {}", location);
                 return;
             }
 
@@ -37,7 +33,6 @@ public class AnimationLoader {
                 JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
                 
                 if (!json.has("animations") || !json.get("animations").isJsonObject()) {
-                    LOGGER.error("Invalid animation format: missing 'animations' object");
                     return;
                 }
                 
@@ -80,7 +75,7 @@ public class AnimationLoader {
                                             keyframes.put(normalizedTime, values);
                                         }
                                     } catch (NumberFormatException e) {
-                                        LOGGER.warn("Invalid keyframe time: {}", keyframeEntry.getKey());
+                                        // Skip
                                     }
                                 }
                                 
@@ -90,25 +85,19 @@ public class AnimationLoader {
                     }
                     
                     animations.put(animationName, animation);
-                    LOGGER.info("Loaded animation: {} with {} bones", animationName, animation.getBones().size());
                 }
                 
                 loaded = true;
                 
             } catch (Exception e) {
-                LOGGER.error("Error parsing animation JSON: {}", e.getMessage());
-                e.printStackTrace();
+                // Silently fail
             }
             
         } catch (Exception e) {
-            LOGGER.error("Failed to load animations: {}", e.getMessage());
-            e.printStackTrace();
+            // Silently fail
         }
     }
     
-    /**
-     * Get interpolated rotation values for a bone at a specific animation progress
-     */
     public static float[] getInterpolatedRotation(String animationName, String boneName, float progress) {
         if (!loaded) {
             loadAnimations(ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "animations/minotaur.animation.json"));
@@ -116,16 +105,12 @@ public class AnimationLoader {
         
         AnimationData animation = animations.get(animationName);
         if (animation == null) {
-            LOGGER.warn("Animation not found: {}", animationName);
             return new float[]{0, 0, 0};
         }
         
         return animation.getInterpolatedRotation(boneName, progress);
     }
     
-    /**
-     * Check if animation exists
-     */
     public static boolean hasAnimation(String animationName) {
         if (!loaded) {
             loadAnimations(ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "animations/minotaur.animation.json"));
@@ -133,9 +118,6 @@ public class AnimationLoader {
         return animations.containsKey(animationName);
     }
     
-    /**
-     * Get animation length
-     */
     public static float getAnimationLength(String animationName) {
         if (!loaded) {
             loadAnimations(ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "animations/minotaur.animation.json"));
@@ -144,17 +126,11 @@ public class AnimationLoader {
         return animation != null ? animation.getLength() : 1.0f;
     }
     
-    /**
-     * Reset loaded animations (for resource reloading)
-     */
     public static void reset() {
         animations.clear();
         loaded = false;
     }
     
-    /**
-     * Represents a single animation with all its bones and keyframes
-     */
     public static class AnimationData {
         private final String name;
         private final float length;

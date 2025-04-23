@@ -34,26 +34,27 @@ public class Labyrythm
     public Labyrythm(IEventBus modEventBus, ModContainer modContainer)
     {
         modEventBus.addListener(this::commonSetup);
-        modEventBus.addListener(this::addCreative);
         modEventBus.addListener(this::registerAttributes);
 
-        // Keep this for game events (like ServerStartingEvent)
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.register(com.github.sajmon.labyrythm.event.ModEvents.class);
         
+        ModEntityTypes.register(modEventBus);
+        ModActivities.register(modEventBus);
+        
         ModItems.register(modEventBus);
+        
         ModStructures.register(modEventBus);
         ModStructurePieces.register(modEventBus);
-        ModEntityTypes.register(modEventBus);
-        ModActivities.register(modEventBus); // Add this line
-        
+
+        modEventBus.addListener(this::addCreative);
+
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)
     {
         event.enqueueWork(() -> {
-            LOGGER.info("Registering Labyrythm structures for world generation");
         });
     }
 
@@ -67,7 +68,6 @@ public class Labyrythm
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
-
     }
 
     public void registerAttributes(EntityAttributeCreationEvent event) {
@@ -80,7 +80,6 @@ public class Labyrythm
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
-
         }
     }
 }

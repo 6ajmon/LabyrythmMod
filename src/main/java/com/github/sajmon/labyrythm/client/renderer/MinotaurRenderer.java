@@ -19,7 +19,6 @@ public class MinotaurRenderer extends MobRenderer<MinotaurEntity, MinotaurModel<
     public MinotaurRenderer(EntityRendererProvider.Context context) {
         super(context, new MinotaurModel<>(context.bakeLayer(ModModelLayers.MINOTAUR)), 0.5F);
         
-        // Explicitly cast to the correct type to ensure item rendering works
         this.addLayer(new ItemInHandLayer<>(this, context.getItemInHandRenderer()));
     }
 
@@ -33,9 +32,6 @@ public class MinotaurRenderer extends MobRenderer<MinotaurEntity, MinotaurModel<
                        MultiBufferSource buffer, int packedLight) {
         matrixStack.pushPose();
         
-        // No need to manually adjust animation state here - entity tick handles it
-        
-        // Render the entity
         super.render(entity, entityYaw, partialTicks, matrixStack, buffer, packedLight);
         
         matrixStack.popPose();
