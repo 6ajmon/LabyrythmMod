@@ -2,13 +2,18 @@ package com.github.sajmon.labyrythm.entity;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.Brain;
@@ -32,9 +37,11 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
@@ -81,9 +88,20 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     private boolean targetDetectedByVibration = false;
     private int vibrationDetectionCooldown = 0;
 
+    private static final Map<String, Set<UUID>> DEFEATED_MINOTAURS = new HashMap<>();
+
+    private final ServerBossEvent bossEvent = new ServerBossEvent(
+            Component.translatable("entity.labyrythm.minotaur.boss_name"),
+            BossEvent.BossBarColor.RED,
+            BossEvent.BossBarOverlay.PROGRESS
+    );
+
     public MinotaurEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 20;
+
+        this.bossEvent.setDarkenScreen(false); // Disable screen darkening effect
+        this.bossEvent.setCreateWorldFog(false); // Disable the fog effect
     }
 
     @Override
@@ -135,6 +153,10 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
         super.tick();
 
         Level level = this.level();
+
+        if (!level.isClientSide()) {
+            this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
+        }
 
         if (!level.isClientSide() && this.getTarget() != null && !this.getTarget().isAlive()) {
             this.setTarget(null);
@@ -574,5 +596,47 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
         } else {
             return "idle";
         }
+    }
+
+    @Override
+    public void startSeenByPlayer(ServerPlayer player) {
+        super.startSeenByPlayer(player);
+        this.bossEvent.addPlayer(player);
+    }
+
+    @Override
+    public void stopSeenByPlayer(ServerPlayer player) {
+        super.stopSeenByPlayer(player);
+        this.bossEvent.removePlayer(player);
+    }
+
+    @Override
+    public void die(DamageSource damageSource) {
+        if (!this.level().isClientSide()) {
+            String dimensionKey = this.level().dimension().location().toString();
+            DEFEATED_MINOTAURS.computeIfAbsent(dimensionKey, k -> new HashSet<>()).add(this.getUUID());
+
+            this.level().playSound(null, this.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE,
+                    SoundSource.HOSTILE, 1.0F, 1.0F);
+
+            this.bossEvent.setVisible(false);
+        }
+
+        super.die(damageSource);
+    }
+
+    @Override
+    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
+        return false;
+    }
+
+    public static boolean isMinotaurDefeatedInDimension(String dimensionKey) {
+        Set<UUID> defeated = DEFEATED_MINOTAURS.get(dimensionKey);
+        return defeated != null && !defeated.isEmpty();
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("entity.labyrythm.minotaur.boss_name");
     }
 }

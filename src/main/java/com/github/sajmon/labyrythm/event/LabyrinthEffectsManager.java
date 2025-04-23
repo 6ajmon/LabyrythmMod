@@ -1,6 +1,7 @@
 package com.github.sajmon.labyrythm.event;
 
 import com.github.sajmon.labyrythm.Labyrythm;
+import com.github.sajmon.labyrythm.entity.MinotaurEntity;
 import com.github.sajmon.labyrythm.structures.ModStructures;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
@@ -96,6 +97,15 @@ public class LabyrinthEffectsManager {
     
     private static void onPlayerEnterLabyrinth(Player player) {
         try {
+            // Check if Minotaur has been defeated in this dimension
+            String dimensionKey = player.level().dimension().location().toString();
+            
+            if (MinotaurEntity.isMinotaurDefeatedInDimension(dimensionKey)) {
+                LOGGER.info("[Labyrinth] Minotaur has been defeated in dimension {}, not applying mining fatigue to player {}", 
+                        dimensionKey, player.getName().getString());
+                return;
+            }
+            
             MobEffectInstance effect = createMiningFatigueEffect();
             player.addEffect(effect);
             LOGGER.info("[Labyrinth] Applied mining fatigue effect to player {}", player.getName().getString());
@@ -106,6 +116,19 @@ public class LabyrinthEffectsManager {
     }
     
     private static void refreshLabyrinthEffects(Player player) {
+        // Check if Minotaur has been defeated before refreshing
+        String dimensionKey = player.level().dimension().location().toString();
+        
+        if (MinotaurEntity.isMinotaurDefeatedInDimension(dimensionKey)) {
+            // If Minotaur is defeated, remove mining fatigue if it exists
+            if (player.hasEffect(MobEffects.DIG_SLOWDOWN)) {
+                player.removeEffect(MobEffects.DIG_SLOWDOWN);
+                LOGGER.info("[Labyrinth] Removed mining fatigue from player {} because Minotaur has been defeated", 
+                        player.getName().getString());
+            }
+            return;
+        }
+        
         if (!player.hasEffect(MobEffects.DIG_SLOWDOWN)) {
             player.addEffect(createMiningFatigueEffect());
         }
