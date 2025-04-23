@@ -1,5 +1,6 @@
 {
   "itemGroup.labyrythm": "Example Mod Tab",
   "block.labyrythm.example_block": "Example Block",
-  "item.labyrythm.bismuth": "Bismuth"
+  "item.labyrythm.bismuth": "Bismuth",
+  "entity.labyrythm.minotaur.boss_name": "The Minotaur of the Labyrinth"
 }

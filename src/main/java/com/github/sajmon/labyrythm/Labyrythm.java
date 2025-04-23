@@ -6,6 +6,9 @@ import com.mojang.logging.LogUtils;
 import com.github.sajmon.labyrythm.item.ModItems;
 import com.github.sajmon.labyrythm.structures.ModStructures;
 import com.github.sajmon.labyrythm.structures.pieces.ModStructurePieces;
+import com.github.sajmon.labyrythm.entity.ModEntityTypes;
+import com.github.sajmon.labyrythm.entity.MinotaurEntity;
+import com.github.sajmon.labyrythm.entity.ModActivities;
 
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.api.distmarker.Dist;
@@ -20,6 +23,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 
 @Mod(Labyrythm.MOD_ID)
 public class Labyrythm
@@ -30,9 +34,13 @@ public class Labyrythm
     public Labyrythm(IEventBus modEventBus, ModContainer modContainer)
     {
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(this::registerAttributes);
 
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.register(com.github.sajmon.labyrythm.event.ModEvents.class);
+        
+        ModEntityTypes.register(modEventBus);
+        ModActivities.register(modEventBus);
         
         ModItems.register(modEventBus);
         
@@ -47,7 +55,6 @@ public class Labyrythm
     private void commonSetup(final FMLCommonSetupEvent event)
     {
         event.enqueueWork(() -> {
-            LOGGER.info("Registering Labyrythm structures for world generation");
         });
     }
 
@@ -61,7 +68,10 @@ public class Labyrythm
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
+    }
 
+    public void registerAttributes(EntityAttributeCreationEvent event) {
+        event.put(ModEntityTypes.MINOTAUR.get(), MinotaurEntity.createAttributes().build());
     }
 
     @EventBusSubscriber(modid = MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -70,7 +80,6 @@ public class Labyrythm
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
-
         }
     }
 }
