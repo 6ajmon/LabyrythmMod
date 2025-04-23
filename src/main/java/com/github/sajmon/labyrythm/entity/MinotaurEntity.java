@@ -33,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiConsumer;
@@ -69,7 +70,7 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     // Vibration system components
     private final DynamicGameEventListener<VibrationSystem.Listener> dynamicGameEventListener = new DynamicGameEventListener<>(new VibrationSystem.Listener(this));
     private final VibrationSystem.User vibrationUser = new MinotaurVibrationUser(this);
-    private VibrationSystem.Data vibrationData = new VibrationSystem.Data();
+    private final VibrationSystem.Data vibrationData = new VibrationSystem.Data();
     
     // NeutralMob components
     private int angerTime;
@@ -335,11 +336,10 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
                 }
                 
                 // Apply speed multiplier by setting attribute modifier
-                this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(BASE_MOVEMENT_SPEED * speedMultiplier);
+                Objects.requireNonNull(this.getAttribute(Attributes.MOVEMENT_SPEED)).setBaseValue(BASE_MOVEMENT_SPEED * speedMultiplier);
             }
         }
-        
-        // Rest of your existing tick method...
+
     }
 
     @Override
@@ -595,11 +595,14 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 80.0D)
-                .add(Attributes.MOVEMENT_SPEED, BASE_MOVEMENT_SPEED) // Use the constant
+                .add(Attributes.MOVEMENT_SPEED, BASE_MOVEMENT_SPEED)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.9D)
                 .add(Attributes.ATTACK_DAMAGE, 12.0D)
                 .add(Attributes.ATTACK_KNOCKBACK, 2.0D)
-                .add(Attributes.FOLLOW_RANGE, 48.0D)
+                .add(Attributes.FOLLOW_RANGE, VIBRATION_DETECTION_RANGE)
+                .add(Attributes.ARMOR, 4.0D)
+                .add(Attributes.ARMOR_TOUGHNESS, 2.0D)
+                .add(Attributes.SCALE, 1.25D)
                 .add(Attributes.JUMP_STRENGTH, 2.0D);
     }
     

@@ -36,10 +36,6 @@ public class MinotaurAi {
             MemoryModuleType.ATTACK_COOLING_DOWN  // Add this line
     );
     
-    private static final int PATROL_RANGE = 48;
-    private static final int MAX_IDLE_TIME = 100;
-    private static final int MIN_IDLE_TIME = 20;
-    
     // Use the pre-registered activities instead of registering them here
     protected static final Activity IDLE = Activity.IDLE;
     protected static final Activity PATROL = ModActivities.PATROL.get();
@@ -70,16 +66,26 @@ public class MinotaurAi {
         Brain<MinotaurEntity> brain = minotaur.getBrain();
         
         Optional<Activity> currentActivityOpt = brain.getActiveNonCoreActivity();
-        Activity currentActivity = currentActivityOpt.orElse(
-            brain.getActiveActivities().isEmpty() ? null : 
-            brain.getActiveActivities().iterator().next()
-        );
+        Activity currentActivity = currentActivityOpt.orElse(null);
+        
+        // If no non-core activity is present, check each possible activity manually
+        if (currentActivity == null) {
+            // Check activities in priority order
+            List<Activity> possibleActivities = List.of(ATTACK, CHASE, INVESTIGATE, PATROL, IDLE);
+            for (Activity activity : possibleActivities) {
+                if (brain.isActive(activity)) {
+                    currentActivity = activity;
+                    break;
+                }
+            }
+        }
         
         System.out.println("Current activity: " + currentActivity);
         
         // Choose activity based on conditions
         if (hasAttackTarget(minotaur)) {
             LivingEntity target = minotaur.getTarget();
+            assert target != null;
             double distanceSq = minotaur.distanceToSqr(target);
             
             // Only chase if the target was detected through vibrations
@@ -212,11 +218,8 @@ public class MinotaurAi {
                 instance.absent(MemoryModuleType.WALK_TARGET)
             ).apply(instance, (walkTarget) -> {
                 return (level, entity, gameTime) -> {
-                    if (!(entity instanceof MinotaurEntity minotaur)) {
-                        return false;
-                    }
-                    
-                    BlockPos soundPos = minotaur.getLastSoundPosition();
+
+                    BlockPos soundPos = entity.getLastSoundPosition();
                     if (soundPos == null) {
                         return false;
                     }
@@ -242,34 +245,31 @@ public class MinotaurAi {
                 instance.absent(MemoryModuleType.ATTACK_COOLING_DOWN)
             ).apply(instance, (attackTarget, attackCoolingDown) -> {
                 return (level, entity, gameTime) -> {
-                    if (!(entity instanceof MinotaurEntity minotaur)) {
-                        return false;
-                    }
-                    
+
                     // Get target directly from the brain
                     LivingEntity target = entity.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).get();
                     
                     // Check if we're already dashing
-                    if (minotaur.isDashing()) {
+                    if (entity.isDashing()) {
                         return true;
                     }
                     
                     // Check if dash is on cooldown
-                    if (!minotaur.canDash()) {
+                    if (!entity.canDash()) {
                         return false;
                     }
                     
                     // Check distance to target
-                    double distance = minotaur.distanceTo(target);
+                    double distance = entity.distanceTo(target);
                     
                     // Debug
-                    System.out.println("Dash check - distance: " + distance + ", can dash: " + minotaur.canDash());
+                    System.out.println("Dash check - distance: " + distance + ", can dash: " + entity.canDash());
                     
                     // CHANGED: Increased max dash distance to 60 (was 40)
                     if (distance >= 5.0 && distance <= 60.0) {
                         // Start dash attack
                         System.out.println("Starting dash attack!");
-                        minotaur.startDashToTarget();
+                        entity.startDashToTarget();
                         // CHANGED: Increased cooldown from 60L to 200L (10 seconds)
                         entity.getBrain().setMemoryWithExpiry(MemoryModuleType.ATTACK_COOLING_DOWN, true, 200L);
                         return true;
