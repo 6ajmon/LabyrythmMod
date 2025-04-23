@@ -3,6 +3,8 @@ package com.github.sajmon.labyrythm.entity;
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Dynamic;
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -15,11 +17,11 @@ import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
 import net.minecraft.world.entity.schedule.Activity;
 
-
 import java.util.List;
 import java.util.Optional;
 
 public class MinotaurAi {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final float PATROL_WALK_SPEED = MinotaurEntity.PATROL_WALK_SPEED;
     private static final float INVESTIGATE_WALK_SPEED = MinotaurEntity.INVESTIGATE_WALK_SPEED;
     private static final float CHASE_WALK_SPEED = MinotaurEntity.CHASE_WALK_SPEED;
@@ -73,33 +75,44 @@ public class MinotaurAi {
             }
         }
         
+        Activity newActivity = null;
+        
         if (hasAttackTarget(minotaur)) {
             LivingEntity target = minotaur.getTarget();
             assert target != null;
             double distanceSq = minotaur.distanceToSqr(target);
             
             if (minotaur.wasTargetDetectedByVibration()) {
-                if (distanceSq <= 6.0) {
+                if (distanceSq <= 3.5) {
                     brain.setActiveActivityIfPossible(ATTACK);
+                    newActivity = ATTACK;
                 } else {
                     brain.setActiveActivityIfPossible(CHASE);
+                    newActivity = CHASE;
+                    minotaur.setChasing(true);
                 }
             } else {
                 minotaur.setTarget(null);
+                minotaur.setChasing(false);
                 brain.eraseMemory(MemoryModuleType.ATTACK_TARGET);
                 brain.setActiveActivityIfPossible(PATROL);
+                newActivity = PATROL;
             }
         } else if (minotaur.getLastSoundPosition() != null) {
             brain.setActiveActivityIfPossible(INVESTIGATE);
+            newActivity = INVESTIGATE;
+            minotaur.setChasing(false);
             
             BlockPos soundPos = minotaur.getLastSoundPosition();
             WalkTarget target = new WalkTarget(soundPos, 1.2F, 1);
             
             brain.setMemory(MemoryModuleType.WALK_TARGET, target);
         } else {
+            minotaur.setChasing(false);
             brain.eraseMemory(MemoryModuleType.WALK_TARGET);
             brain.setActiveActivityIfPossible(PATROL);
             brain.setDefaultActivity(PATROL);
+            newActivity = PATROL;
         }
     }
     
@@ -237,9 +250,9 @@ public class MinotaurAi {
                     
                     double distSq = entity.distanceToSqr(target);
                     
-                    if (distSq <= 6.0) {
+                    if (distSq <= 3.5) {
                         entity.doHurtTarget(target);
-                        entity.getBrain().setMemoryWithExpiry(MemoryModuleType.ATTACK_COOLING_DOWN, true, 20L);
+                        entity.getBrain().setMemoryWithExpiry(MemoryModuleType.ATTACK_COOLING_DOWN, true, 30L);
                         return true;
                     }
                     

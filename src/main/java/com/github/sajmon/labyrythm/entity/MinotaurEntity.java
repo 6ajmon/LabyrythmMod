@@ -9,11 +9,14 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.BossEvent;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.Brain;
@@ -26,6 +29,8 @@ import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.schedule.Activity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.DynamicGameEventListener;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -45,9 +50,13 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
+import com.github.sajmon.labyrythm.client.animation.AnimationLoader;
+
 public class MinotaurEntity extends Monster implements NeutralMob, VibrationSystem {
     private static final EntityDataAccessor<Integer> ANGER_LEVEL = SynchedEntityData.defineId(MinotaurEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> IS_DASHING = SynchedEntityData.defineId(MinotaurEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> IS_CHASING = SynchedEntityData.defineId(MinotaurEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> ATTACK_TIME = SynchedEntityData.defineId(MinotaurEntity.class, EntityDataSerializers.INT);
 
     public static final double BASE_MOVEMENT_SPEED = 0.25D;
     public static final float PATROL_SPEED_MULTIPLIER = 1.5f;
@@ -96,12 +105,17 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
             BossEvent.BossBarOverlay.PROGRESS
     );
 
+    private static final int MAX_ATTACK_TIME = 15;
+    private boolean attackAnimationStarted = false;
+
     public MinotaurEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 20;
 
-        this.bossEvent.setDarkenScreen(false); // Disable screen darkening effect
-        this.bossEvent.setCreateWorldFog(false); // Disable the fog effect
+        this.bossEvent.setDarkenScreen(false);
+        this.bossEvent.setCreateWorldFog(false);
+        
+        this.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_AXE));
     }
 
     @Override
@@ -109,6 +123,8 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
         super.defineSynchedData(builder);
         builder.define(ANGER_LEVEL, 0);
         builder.define(IS_DASHING, false);
+        builder.define(IS_CHASING, false);
+        builder.define(ATTACK_TIME, 0);
     }
 
     @Override
@@ -153,6 +169,33 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
         super.tick();
 
         Level level = this.level();
+
+        int attackTime = getAttackTime();
+        if (attackTime > 0) {
+            setAttackTime(attackTime - 1);
+        } else if (attackAnimationStarted) {
+            attackAnimationStarted = false;
+            this.attackAnim = 0.0F;
+            
+            if (level.isClientSide()) {
+                idleAnimationState.stop();
+                walkAnimationState.stop();
+                dashAnimationState.stop();
+                attackAnimationState.stop();
+                
+                String currentState = determineAnimationState();
+                
+                switch (currentState) {
+                    case "idle" -> idleAnimationState.start(this.tickCount);
+                    case "walk" -> walkAnimationState.start(this.tickCount);
+                    case "run" -> dashAnimationState.start(this.tickCount);
+                }
+            }
+        }
+
+        if (!level.isClientSide()) {
+            verifyAndRestoreAxe();
+        }
 
         if (!level.isClientSide()) {
             this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
@@ -245,18 +288,26 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
         }
 
         if (level.isClientSide()) {
-            if (this.isDashing()) {
-                dashAnimationState.startIfStopped(this.tickCount);
-            } else {
-                dashAnimationState.stop();
-
-                if (this.getNavigation().isInProgress()) {
-                    walkAnimationState.startIfStopped(this.tickCount);
-                    idleAnimationState.stop();
-                } else {
-                    walkAnimationState.stop();
+            String currentState = this.getAnimationState();
+            
+            idleAnimationState.stop();
+            walkAnimationState.stop();
+            dashAnimationState.stop();
+            attackAnimationState.stop();
+            
+            switch (currentState) {
+                case "idle":
                     idleAnimationState.startIfStopped(this.tickCount);
-                }
+                    break;
+                case "walk":
+                    walkAnimationState.startIfStopped(this.tickCount);
+                    break;
+                case "run":
+                    dashAnimationState.startIfStopped(this.tickCount);
+                    break;
+                case "attack":
+                    dashAnimationState.startIfStopped(this.tickCount);
+                    break;
             }
         }
 
@@ -264,7 +315,7 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
             LivingEntity target = this.getTarget();
             double distSq = this.distanceToSqr(target);
 
-            if (distSq <= 6.0 && tickCount % 20 == 0) {
+            if (distSq <= 3.5 && tickCount % 20 == 0) {
                 this.doHurtTarget(target);
             }
         }
@@ -286,6 +337,22 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
                 Objects.requireNonNull(this.getAttribute(Attributes.MOVEMENT_SPEED)).setBaseValue(BASE_MOVEMENT_SPEED * speedMultiplier);
             }
         }
+    }
+
+    private void verifyAndRestoreAxe() {
+        ItemStack mainHandItem = this.getItemBySlot(EquipmentSlot.MAINHAND);
+        if (mainHandItem.isEmpty() || !mainHandItem.is(Items.IRON_AXE)) {
+            this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_AXE));
+        }
+    }
+
+    @Override
+    public ItemStack getMainHandItem() {
+        ItemStack mainHandItem = super.getMainHandItem();
+        if (mainHandItem.isEmpty()) {
+            return new ItemStack(Items.IRON_AXE);
+        }
+        return mainHandItem;
     }
 
     @Override
@@ -328,6 +395,57 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
             }
         }
 
+        return result;
+    }
+
+    @Override
+    public float getAttackAnim(float partialTicks) {
+        int attackTime = getAttackTime();
+        
+        int maxAttackTime = this.level().isClientSide() ? 
+            (int)(AnimationLoader.getAnimationLength("attack") * 20) : MAX_ATTACK_TIME;
+            
+        if (attackTime > 0) {
+            float progress = 1.0F - ((float)attackTime - partialTicks) / maxAttackTime;
+            progress = Mth.clamp(progress, 0.0F, 1.0F);
+            return progress;
+        }
+        return 0.0F;
+    }
+
+    @Override
+    public boolean doHurtTarget(Entity entity) {
+        this.swing(InteractionHand.MAIN_HAND);
+        
+        float animLength = 0.75f;
+        if (this.level().isClientSide()) {
+            animLength = AnimationLoader.getAnimationLength("attack");
+        }
+        
+        int attackTicks = (int)(animLength * 20);
+        if (attackTicks <= 0) attackTicks = MAX_ATTACK_TIME;
+        
+        this.setAttackTime(attackTicks);
+        this.attackAnimationStarted = false;
+        this.attackAnim = 0.0F;
+        
+        if (entity instanceof LivingEntity) {
+            this.getLookControl().setLookAt(entity);
+            double dx = entity.getX() - this.getX();
+            double dz = entity.getZ() - this.getZ();
+            float yawDegrees = (float)(Math.atan2(dz, dx) * (180D / Math.PI)) - 90F;
+            this.setYRot(yawDegrees);
+            this.yRotO = yawDegrees;
+            this.yBodyRot = yawDegrees;
+            this.yHeadRot = yawDegrees;
+        }
+        
+        boolean result = super.doHurtTarget(entity);
+        
+        if (result) {
+            this.playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 1.0F, 0.8F + this.random.nextFloat() * 0.4F);
+        }
+        
         return result;
     }
 
@@ -392,21 +510,28 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
 
             this.setDeltaMovement(dx * DASH_FORCE, 0.1, dz * DASH_FORCE);
 
-            this.dashDurationTicks = DASH_DURATION_TICKS;
+            double yawRadians = Math.atan2(dz, dx);
+            float yawDegrees = (float)Math.toDegrees(yawRadians) - 90F;
+            
+            this.setYRot(yawDegrees);
+            this.yRotO = yawDegrees;
+            this.yBodyRot = yawDegrees;
+            this.yHeadRot = yawDegrees;
+
+            this.dashDurationTicks = DASH_DURATION_TICKS * 2;
             this.dashCooldownTicks = DASH_COOLDOWN_TICKS;
 
-            this.playSound(SoundEvents.PHANTOM_SWOOP, 2.0F, 1.0F);
+            this.playSound(SoundEvents.COW_HURT, 2.0F, 0.6F);
         }
     }
 
     private void performDashAttack() {
-        Vec3 direction = this.getDeltaMovement().normalize();
         AABB attackBox = this.getBoundingBox().inflate(1.0);
 
         for (Entity entity : this.level().getEntities(this, attackBox)) {
             if (entity != this && entity instanceof LivingEntity livingEntity && this.canTargetEntity(entity)) {
-                entity.hurt(this.damageSources().mobAttack(this), (float) this.getAttributeValue(Attributes.ATTACK_DAMAGE));
-
+                this.doHurtTarget(entity);
+                
                 double knockbackStrength = this.getAttributeValue(Attributes.ATTACK_KNOCKBACK);
                 if (knockbackStrength > 0) {
                     Vec3 knockbackDir = entity.position().subtract(this.position()).normalize();
@@ -422,6 +547,14 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
 
     public void setDashing(boolean dashing) {
         this.entityData.set(IS_DASHING, dashing);
+    }
+
+    public boolean isChasing() {
+        return this.entityData.get(IS_CHASING);
+    }
+
+    public void setChasing(boolean chasing) {
+        this.entityData.set(IS_CHASING, chasing);
     }
 
     public void setLastSoundPosition(BlockPos pos) {
@@ -442,7 +575,7 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     }
 
     public boolean isWithinMeleeAttackRange(LivingEntity target) {
-        return this.distanceToSqr(target) <= 6.0;
+        return this.distanceToSqr(target) <= 3.5;
     }
 
     @Override
@@ -496,16 +629,27 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 80.0D)
+                .add(Attributes.MAX_HEALTH, 200.0D)
                 .add(Attributes.MOVEMENT_SPEED, BASE_MOVEMENT_SPEED)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.9D)
                 .add(Attributes.ATTACK_DAMAGE, 12.0D)
                 .add(Attributes.ATTACK_KNOCKBACK, 2.0D)
                 .add(Attributes.FOLLOW_RANGE, VIBRATION_DETECTION_RANGE)
-                .add(Attributes.ARMOR, 4.0D)
-                .add(Attributes.ARMOR_TOUGHNESS, 2.0D)
+                .add(Attributes.ARMOR, 6.0D)
+                .add(Attributes.ARMOR_TOUGHNESS, 6.0D)
                 .add(Attributes.SCALE, 1.24D)
                 .add(Attributes.JUMP_STRENGTH, 2.0D);
+    }
+
+    @Override
+    protected void populateDefaultEquipmentSlots(RandomSource random, DifficultyInstance difficulty) {
+        super.populateDefaultEquipmentSlots(random, difficulty);
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_AXE));
+    }
+    
+    @Override
+    public boolean canPickUpLoot() {
+        return false;
     }
 
     private static class MinotaurVibrationUser implements VibrationSystem.User {
@@ -579,23 +723,50 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
         }
     }
 
-    public String getAnimationState() {
+    private String determineAnimationState() {
         if (this.isDashing()) {
             return "run";
-        } else if (this.isAggressive() || this.getTarget() != null) {
-            LivingEntity target = this.getTarget();
-            if (target != null && this.distanceToSqr(target) <= 4.0) {
-                return "attack";
-            } else {
+        }
+        
+        if (this.isChasing()) {
+            return "run";
+        }
+        
+        LivingEntity target = this.getTarget();
+        if (target != null) {
+            double distSq = this.distanceToSqr(target);
+            if (distSq > 3.5) {
                 return "run";
             }
-        } else if (this.getNavigation().isInProgress()) {
-            return "walk";
-        } else if (this.lastSoundPosition != null) {
-            return "listen";
-        } else {
-            return "idle";
         }
+        
+        boolean isMoving = this.getNavigation().isInProgress();
+        if (!isMoving) {
+            double moveSpeed = this.getDeltaMovement().horizontalDistanceSqr();
+            isMoving = moveSpeed > 0.003D;
+        }
+        
+        if (isMoving || this.lastSoundPosition != null) {
+            return "walk";
+        }
+        
+        return "idle";
+    }
+
+    public String getAnimationState() {
+        if (this.getAttackTime() > 0) {
+            return "attack";
+        }
+        
+        return determineAnimationState();
+    }
+
+    public int getAttackTime() {
+        return this.entityData.get(ATTACK_TIME);
+    }
+
+    public void setAttackTime(int time) {
+        this.entityData.set(ATTACK_TIME, time);
     }
 
     @Override
@@ -638,5 +809,25 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     @Override
     public Component getDisplayName() {
         return Component.translatable("entity.labyrythm.minotaur.boss_name");
+    }
+   
+    @Override
+    protected SoundEvent getAmbientSound() {
+        return SoundEvents.COW_AMBIENT;
+    }
+    
+    @Override
+    protected SoundEvent getHurtSound(DamageSource damageSource) {
+        return SoundEvents.COW_HURT;
+    }
+    
+    @Override
+    protected SoundEvent getDeathSound() {
+        return SoundEvents.COW_DEATH;
+    }
+    
+    @Override
+    protected float getSoundVolume() {
+        return 1.5F;
     }
 }

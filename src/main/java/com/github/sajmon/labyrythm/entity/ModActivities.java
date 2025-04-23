@@ -1,9 +1,7 @@
 package com.github.sajmon.labyrythm.entity;
 
 import com.github.sajmon.labyrythm.Labyrythm;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.schedule.Activity;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;

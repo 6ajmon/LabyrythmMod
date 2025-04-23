@@ -7,6 +7,7 @@ import com.github.sajmon.labyrythm.entity.MinotaurEntity;
 
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.resources.ResourceLocation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -17,6 +18,9 @@ public class MinotaurRenderer extends MobRenderer<MinotaurEntity, MinotaurModel<
 
     public MinotaurRenderer(EntityRendererProvider.Context context) {
         super(context, new MinotaurModel<>(context.bakeLayer(ModModelLayers.MINOTAUR)), 0.5F);
+        
+        // Explicitly cast to the correct type to ensure item rendering works
+        this.addLayer(new ItemInHandLayer<>(this, context.getItemInHandRenderer()));
     }
 
     @Override
@@ -27,26 +31,13 @@ public class MinotaurRenderer extends MobRenderer<MinotaurEntity, MinotaurModel<
     @Override
     public void render(MinotaurEntity entity, float entityYaw, float partialTicks, PoseStack matrixStack,
                        MultiBufferSource buffer, int packedLight) {
-        // Get the animation controller if you're using GeckoLib, or however you're handling animations
-        String animState = entity.getAnimationState();
+        matrixStack.pushPose();
         
-        // Play the appropriate animation based on state
-        // This code will vary based on your animation system, but conceptually:
-        switch (animState) {
-            case "idle":
-                // Play idle animation
-                break;
-            case "walk":
-                // Play walk animation
-                break;
-            case "run":
-                // Play run animation
-                break;
-            case "attack":
-                // Play attack animation
-                break;
-        }
+        // No need to manually adjust animation state here - entity tick handles it
         
+        // Render the entity
         super.render(entity, entityYaw, partialTicks, matrixStack, buffer, packedLight);
+        
+        matrixStack.popPose();
     }
 }

@@ -1,15 +1,18 @@
 package com.github.sajmon.labyrythm.client.model;
 
 import com.github.sajmon.labyrythm.entity.MinotaurEntity;
+import com.github.sajmon.labyrythm.client.animation.AnimationLoader;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.model.ArmedModel;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.HumanoidArm;
 
-public class MinotaurModel<T extends MinotaurEntity> extends EntityModel<T> {
+public class MinotaurModel<T extends MinotaurEntity> extends EntityModel<T> implements ArmedModel {
     private final ModelPart root;
     private final ModelPart head;
     private final ModelPart body;
@@ -114,25 +117,83 @@ public class MinotaurModel<T extends MinotaurEntity> extends EntityModel<T> {
         // Reset model parts
         this.head.xRot = 0;
         this.head.yRot = 0;
+        this.head.zRot = 0;
+        this.rightArm.xRot = 0;
+        this.rightArm.yRot = 0;
+        this.rightArm.zRot = 0;
+        this.leftArm.xRot = 0;
+        this.leftArm.yRot = 0;
+        this.leftArm.zRot = 0;
+        this.rightLeg.xRot = 0;
+        this.rightLeg.yRot = 0;
+        this.rightLeg.zRot = 0;
+        this.leftLeg.xRot = 0;
+        this.leftLeg.yRot = 0;
+        this.leftLeg.zRot = 0;
         
-        // Head rotation based on where entity is looking
-        this.head.xRot = headPitch * ((float)Math.PI / 180F);
-        this.head.yRot = netHeadYaw * ((float)Math.PI / 180F);
+        String animState = entity.getAnimationState();
         
-        // Basic walking animation
-        this.rightArm.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 2.0F * limbSwingAmount * 0.5F;
-        this.leftArm.xRot = Mth.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F;
-        this.rightLeg.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
-        this.leftLeg.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
+        this.head.xRot += headPitch * ((float)Math.PI / 180F);
+        this.head.yRot += netHeadYaw * ((float)Math.PI / 180F);
         
-        // Replace the problematic isAngryAt(null) check with a safer alternative
-        if (entity.isAggressive() || entity.getRemainingPersistentAngerTime() > 0) {
-            // Make arms more aggressive
-            float attackProgress = entity.getAttackAnim(ageInTicks);
-            if (attackProgress > 0) {
-                this.rightArm.xRot = -2.0F + 1.5F * Mth.sin(attackProgress * (float)Math.PI);
-            }
+        switch (animState) {
+            case "idle":
+                applyIdleAnimation(ageInTicks);
+                break;
+            case "walk":
+                applyWalkAnimation(limbSwing, limbSwingAmount, ageInTicks);
+                break;
+            case "run":
+                applyRunAnimation(limbSwing, limbSwingAmount, ageInTicks);
+                break;
+            case "attack":
+                applyRunAnimation(limbSwing, limbSwingAmount, ageInTicks);
+                break;
+            default:
+                applyIdleAnimation(ageInTicks);
+                break;
         }
+    }
+
+    private void applyIdleAnimation(float ageInTicks) {
+        float animLength = AnimationLoader.getAnimationLength("idle");
+        float animTime = (ageInTicks % (animLength * 20)) / (animLength * 20);
+        
+        float[] headRotation = AnimationLoader.getInterpolatedRotation("idle", "Head", animTime);
+        this.head.xRot += headRotation[0] * ((float)Math.PI / 180F);
+        this.head.yRot += headRotation[1] * ((float)Math.PI / 180F);
+        this.head.zRot += headRotation[2] * ((float)Math.PI / 180F);
+        
+        float[] rightArmRotation = AnimationLoader.getInterpolatedRotation("idle", "Right Arm", animTime);
+        this.rightArm.xRot += rightArmRotation[0] * ((float)Math.PI / 180F);
+        this.rightArm.yRot += rightArmRotation[1] * ((float)Math.PI / 180F);
+        this.rightArm.zRot += rightArmRotation[2] * ((float)Math.PI / 180F);
+        
+        float[] leftArmRotation = AnimationLoader.getInterpolatedRotation("idle", "Left Arm", animTime);
+        this.leftArm.xRot += leftArmRotation[0] * ((float)Math.PI / 180F);
+        this.leftArm.yRot += leftArmRotation[1] * ((float)Math.PI / 180F);
+        this.leftArm.zRot += leftArmRotation[2] * ((float)Math.PI / 180F);
+    }
+
+    private void applyWalkAnimation(float limbSwing, float limbSwingAmount, float ageInTicks) {
+        float animationSpeed = 0.2F;
+        float phase = limbSwing * animationSpeed;
+        
+        this.rightArm.xRot += Mth.cos(phase * (float)Math.PI + (float)Math.PI) * 10.0F * (float)Math.PI / 180F * limbSwingAmount;
+        this.leftArm.xRot += Mth.cos(phase * (float)Math.PI) * 10.0F * (float)Math.PI / 180F * limbSwingAmount;
+        this.rightLeg.xRot += Mth.cos(phase * (float)Math.PI) * 25.0F * (float)Math.PI / 180F * limbSwingAmount;
+        this.leftLeg.xRot += Mth.cos(phase * (float)Math.PI + (float)Math.PI) * 25.0F * (float)Math.PI / 180F * limbSwingAmount;
+    }
+
+    private void applyRunAnimation(float limbSwing, float limbSwingAmount, float ageInTicks) {
+        float animationSpeed = 0.1F;
+        float phase = limbSwing * animationSpeed;
+        
+        this.rightArm.xRot = -105.0F * (float)Math.PI / 180F;
+        this.rightArm.xRot += Mth.cos(phase * (float)Math.PI * 2) * 20.0F * (float)Math.PI / 180F * limbSwingAmount;
+        this.leftArm.xRot += Mth.cos(phase * (float)Math.PI * 2) * 40.0F * (float)Math.PI / 180F * limbSwingAmount;
+        this.rightLeg.xRot += Mth.cos(phase * (float)Math.PI * 2) * 65.0F * (float)Math.PI / 180F * limbSwingAmount;
+        this.leftLeg.xRot += Mth.cos(phase * (float)Math.PI * 2 + (float)Math.PI) * 65.0F * (float)Math.PI / 180F * limbSwingAmount;
     }
 
     @Override
@@ -145,5 +206,15 @@ public class MinotaurModel<T extends MinotaurEntity> extends EntityModel<T> {
         leftArm.render(poseStack, buffer, packedLight, packedOverlay, packedColor);
         rightLeg.render(poseStack, buffer, packedLight, packedOverlay, packedColor);
         leftLeg.render(poseStack, buffer, packedLight, packedOverlay, packedColor);
+    }
+
+    // axe handling
+    @Override
+    public void translateToHand(HumanoidArm arm, PoseStack poseStack) {
+        boolean rightArm = arm == HumanoidArm.RIGHT;
+        ModelPart armPart = rightArm ? this.rightArm : this.leftArm;
+        
+        armPart.translateAndRotate(poseStack);
+        
     }
 }
