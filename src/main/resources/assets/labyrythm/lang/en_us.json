@@ -17,8 +17,8 @@
   "item.minecraft.lingering_potion.effect.long_darkness": "Lingering Potion of Darkness",
   "item.minecraft.tipped_arrow.effect.long_darkness": "Arrow of Darkness",
   
-  "item.minecraft.potion.effect.strong_darkness": "Potion of Darkness",
-  "item.minecraft.splash_potion.effect.strong_darkness": "Splash Potion of Darkness",
-  "item.minecraft.lingering_potion.effect.strong_darkness": "Lingering Potion of Darkness",
-  "item.minecraft.tipped_arrow.effect.strong_darkness": "Arrow of Darkness"
+  "item.minecraft.potion.effect.lingering_darkness": "Lingering Potion of Darkness",
+  "item.minecraft.splash_potion.effect.lingering_darkness": "Splash Potion of Darkness",
+  "item.minecraft.lingering_potion.effect.lingering_darkness": "Lingering Potion of Darkness",
+  "item.minecraft.tipped_arrow.effect.lingering_darkness": "Arrow of Darkness"
 }

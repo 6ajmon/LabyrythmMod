@@ -26,15 +26,14 @@ public class ModCreativeTabs {
                 output.accept(ModItems.SCULK_HORN.get());
                 output.accept(ModItems.SCULK_UPGRADE.get());
                 
-                // Add potions to creative tab - using the DeferredHolder directly
+                // Add potions to creative tab
                 output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.DARKNESS));
                 output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.LONG_DARKNESS));
-                output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.STRONG_DARKNESS));
+                output.accept(PotionContents.createItemStack(Items.LINGERING_POTION, ModPotions.LINGERING_DARKNESS));
                 
                 // Add splash potions
                 output.accept(PotionContents.createItemStack(Items.SPLASH_POTION, ModPotions.DARKNESS));
                 output.accept(PotionContents.createItemStack(Items.SPLASH_POTION, ModPotions.LONG_DARKNESS));
-                output.accept(PotionContents.createItemStack(Items.SPLASH_POTION, ModPotions.STRONG_DARKNESS));
             });
 
     public static final Supplier<CreativeModeTab> LABYRYTHM_TAB =

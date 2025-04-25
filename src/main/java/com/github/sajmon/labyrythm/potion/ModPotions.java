@@ -21,9 +21,9 @@ public class ModPotions {
     public static final DeferredHolder<Potion, Potion> LONG_DARKNESS = POTIONS.register("long_darkness",
             () -> new Potion(new MobEffectInstance(MobEffects.DARKNESS, 9600)));
     
-    // Strong darkness potion (1.5 minutes but stronger effect)
-    public static final DeferredHolder<Potion, Potion> STRONG_DARKNESS = POTIONS.register("strong_darkness",
-            () -> new Potion(new MobEffectInstance(MobEffects.DARKNESS, 1800, 1)));
+    // Lingering darkness potion (45 seconds but with area of effect)
+    public static final DeferredHolder<Potion, Potion> LINGERING_DARKNESS = POTIONS.register("lingering_darkness",
+            () -> new Potion(new MobEffectInstance(MobEffects.DARKNESS, 900)));
     
     public static void register(IEventBus eventBus) {
         POTIONS.register(eventBus);

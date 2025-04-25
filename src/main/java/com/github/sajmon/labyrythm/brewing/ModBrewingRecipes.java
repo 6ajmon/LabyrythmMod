@@ -28,7 +28,7 @@ public class ModBrewingRecipes {
         // Long duration variant
         builder.addMix(ModPotions.DARKNESS, Items.REDSTONE, ModPotions.LONG_DARKNESS);
         
-        // Strong variant
-        builder.addMix(ModPotions.DARKNESS, Items.GLOWSTONE_DUST, ModPotions.STRONG_DARKNESS);
+        // Lingering variant (using dragon breath)
+        builder.addContainerRecipe(Items.POTION, Items.DRAGON_BREATH, Items.LINGERING_POTION);
     }
 }
