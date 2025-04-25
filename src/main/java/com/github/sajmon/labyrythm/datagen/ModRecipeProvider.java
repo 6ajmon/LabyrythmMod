@@ -41,14 +41,24 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_sculk_upgrade", has(ModItems.SCULK_UPGRADE.get()))
                 .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "sculk_upgrade_duplication"));
 
-        // Smithing recipe for Minotaur's Resonance
+        // Smithing recipe for Minotaur's Resonance (Original recipe with Sculk Upgrade)
         SmithingTransformRecipeBuilder.smithing(
                 Ingredient.of(ModItems.SCULK_UPGRADE.get()),  // template
-                Ingredient.of(Items.DIAMOND_AXE),             // base (Changed from ItemTags.AXES)
+                Ingredient.of(Items.DIAMOND_AXE),             // base
                 Ingredient.of(Items.ECHO_SHARD),              // addition
                 RecipeCategory.COMBAT,
                 ModItems.MINOTAURS_RESONANCE.get())
                 .unlocks("has_sculk_upgrade", has(ModItems.SCULK_UPGRADE.get()))
                 .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaurs_resonance"));
+                
+        // Alternative Smithing recipe for Minotaur's Resonance using Sculk Horn
+        SmithingTransformRecipeBuilder.smithing(
+                Ingredient.of(ModItems.SCULK_UPGRADE.get()),     // template
+                Ingredient.of(Items.DIAMOND_AXE),           // base (using Netherite Axe for balance)
+                Ingredient.of(ModItems.SCULK_HORN.get()),     // template
+                RecipeCategory.COMBAT,
+                ModItems.MINOTAURS_RESONANCE.get())
+                .unlocks("has_sculk_horn", has(ModItems.SCULK_HORN.get()))
+                .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaurs_resonance_alternative"));
     }
 }

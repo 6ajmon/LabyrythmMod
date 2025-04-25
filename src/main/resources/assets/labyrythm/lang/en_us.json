@@ -5,5 +5,20 @@
   "item.labyrythm.minotaurs_resonance.tooltip2": "Contains the power of the labyrinth.",
   "item.labyrythm.sculk_horn": "Sculk Horn",
   "item.labyrythm.sculk_upgrade": "Sculk Upgrade",
-  "itemGroup.labyrythm.main_tab": "Labyrythm"
+  "itemGroup.labyrythm.main_tab": "Labyrythm",
+  
+  "item.minecraft.potion.effect.darkness": "Potion of Darkness",
+  "item.minecraft.splash_potion.effect.darkness": "Splash Potion of Darkness",
+  "item.minecraft.lingering_potion.effect.darkness": "Lingering Potion of Darkness",
+  "item.minecraft.tipped_arrow.effect.darkness": "Arrow of Darkness",
+  
+  "item.minecraft.potion.effect.long_darkness": "Potion of Darkness",
+  "item.minecraft.splash_potion.effect.long_darkness": "Splash Potion of Darkness",
+  "item.minecraft.lingering_potion.effect.long_darkness": "Lingering Potion of Darkness",
+  "item.minecraft.tipped_arrow.effect.long_darkness": "Arrow of Darkness",
+  
+  "item.minecraft.potion.effect.strong_darkness": "Potion of Darkness",
+  "item.minecraft.splash_potion.effect.strong_darkness": "Splash Potion of Darkness",
+  "item.minecraft.lingering_potion.effect.strong_darkness": "Lingering Potion of Darkness",
+  "item.minecraft.tipped_arrow.effect.strong_darkness": "Arrow of Darkness"
 }

@@ -1,11 +1,14 @@
 package com.github.sajmon.labyrythm.item;
 
 import com.github.sajmon.labyrythm.Labyrythm;
+import com.github.sajmon.labyrythm.potion.ModPotions;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionContents;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -22,6 +25,16 @@ public class ModCreativeTabs {
                 output.accept(ModItems.MINOTAURS_RESONANCE.get());
                 output.accept(ModItems.SCULK_HORN.get());
                 output.accept(ModItems.SCULK_UPGRADE.get());
+                
+                // Add potions to creative tab - using the DeferredHolder directly
+                output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.DARKNESS));
+                output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.LONG_DARKNESS));
+                output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.STRONG_DARKNESS));
+                
+                // Add splash potions
+                output.accept(PotionContents.createItemStack(Items.SPLASH_POTION, ModPotions.DARKNESS));
+                output.accept(PotionContents.createItemStack(Items.SPLASH_POTION, ModPotions.LONG_DARKNESS));
+                output.accept(PotionContents.createItemStack(Items.SPLASH_POTION, ModPotions.STRONG_DARKNESS));
             });
 
     public static final Supplier<CreativeModeTab> LABYRYTHM_TAB =
