@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 public enum ModTiers implements Tier {
     SCULK(4, 2048, 9.0F, 4.0F, 15, 
-            () -> Ingredient.of(Items.ECHO_SHARD));
+            () -> Ingredient.of(ModItems.SCULK_HORN.get(), Items.ECHO_SHARD));
 
     private final int level;
     private final int uses;

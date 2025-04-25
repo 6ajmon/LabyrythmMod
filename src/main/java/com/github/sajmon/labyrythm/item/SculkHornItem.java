@@ -8,20 +8,18 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SculkCatalystBlock;
 import net.minecraft.world.level.gameevent.GameEvent;
 
 import java.util.List;
 
 public class SculkHornItem extends Item {
-    private static final int COOLDOWN_TICKS = 600; // 30 seconds
+    private static final int COOLDOWN_TICKS = 600;
     
     public SculkHornItem(Properties properties) {
         super(properties);
