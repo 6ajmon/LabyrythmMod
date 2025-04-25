@@ -3,6 +3,7 @@ package com.github.sajmon.labyrythm.datagen;
 import com.github.sajmon.labyrythm.Labyrythm;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
+import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
@@ -26,20 +27,48 @@ public class DataGenerators {
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
         // Server providers
-        generator.addProvider(event.includeServer(), new LootTableProvider(packOutput, Collections.emptySet(),
-                List.of(new LootTableProvider.SubProviderEntry(ModBlockLootTableProvider::new, LootContextParamSets.BLOCK)), lookupProvider));
-        generator.addProvider(event.includeServer(), new ModRecipeProvider(packOutput, lookupProvider));
+        // Combined loot table provider for both block and chest loot tables
+        generator.addProvider(event.includeServer(), (DataProvider.Factory<LootTableProvider>) output -> 
+            new LootTableProvider(output, Collections.emptySet(),
+                List.of(
+                    new LootTableProvider.SubProviderEntry(ModBlockLootTableProvider::new, LootContextParamSets.BLOCK),
+                    new LootTableProvider.SubProviderEntry(ModChestLootTableProvider::new, LootContextParamSets.CHEST)
+                ), 
+                lookupProvider));
+        
+        // Add recipe provider - Use explicit cast
+        generator.addProvider(event.includeServer(), (DataProvider.Factory<ModRecipeProvider>) output -> 
+            new ModRecipeProvider(output, lookupProvider));
 
+        // Create block tags provider
         BlockTagsProvider blockTagsProvider = new ModBlockTagProvider(packOutput, lookupProvider, existingFileHelper);
-        generator.addProvider(event.includeServer(), blockTagsProvider);
-        generator.addProvider(event.includeServer(), new ModItemTagProvider(packOutput, lookupProvider, blockTagsProvider.contentsGetter(), existingFileHelper));
+        
+        // Add block tags provider - Use explicit cast
+        generator.addProvider(event.includeServer(), (DataProvider.Factory<BlockTagsProvider>) output -> blockTagsProvider);
+        
+        // Add item tags provider - Use explicit cast  
+        generator.addProvider(event.includeServer(), (DataProvider.Factory<ModItemTagProvider>) output -> 
+            new ModItemTagProvider(output, lookupProvider, blockTagsProvider.contentsGetter(), existingFileHelper));
 
-        generator.addProvider(event.includeServer(), new ModDataMapProvider(packOutput, lookupProvider));
-        generator.addProvider(event.includeServer(), new ModDatapackProvider(packOutput, lookupProvider));
-        generator.addProvider(event.includeServer(), new ModGlobalLootModifierProvider(packOutput, lookupProvider));
+        // Add data map provider - Use explicit cast
+        generator.addProvider(event.includeServer(), (DataProvider.Factory<ModDataMapProvider>) output -> 
+            new ModDataMapProvider(output, lookupProvider));
+        
+        // Add datapack provider - Use explicit cast
+        generator.addProvider(event.includeServer(), (DataProvider.Factory<ModDatapackProvider>) output -> 
+            new ModDatapackProvider(output, lookupProvider));
+        
+        // Add global loot modifier provider - Use explicit cast
+        generator.addProvider(event.includeServer(), (DataProvider.Factory<ModGlobalLootModifierProvider>) output -> 
+            new ModGlobalLootModifierProvider(output, lookupProvider));
 
         // Client providers
-        generator.addProvider(event.includeClient(), new ModItemModelProvider(packOutput, existingFileHelper));
-        generator.addProvider(event.includeClient(), new ModBlockStateProvider(packOutput, existingFileHelper));
+        // Add item model provider - Use explicit cast
+        generator.addProvider(event.includeClient(), (DataProvider.Factory<ModItemModelProvider>) output -> 
+            new ModItemModelProvider(output, existingFileHelper));
+        
+        // Add block state provider - Use explicit cast
+        generator.addProvider(event.includeClient(), (DataProvider.Factory<ModBlockStateProvider>) output -> 
+            new ModBlockStateProvider(output, existingFileHelper));
     }
 }
