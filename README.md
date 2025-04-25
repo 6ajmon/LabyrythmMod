@@ -57,7 +57,7 @@ or
 
 Download from/using:
 - [Curseforge](Curseforge)
-- [Modrinth](Modrinth)
+- [Modrinth](https://modrinth.com/mod/labyrythm)
 
 ## About
 
