@@ -21,6 +21,7 @@ public class ModCreativeTabs {
             .displayItems((parameters, output) -> {
                 output.accept(ModItems.MINOTAURS_RESONANCE.get());
                 output.accept(ModItems.SCULK_HORN.get());
+                output.accept(ModItems.SCULK_UPGRADE.get());
             });
 
     public static final Supplier<CreativeModeTab> LABYRYTHM_TAB =

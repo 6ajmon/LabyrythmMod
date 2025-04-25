@@ -25,6 +25,9 @@ public class ModItems {
             
     public static final DeferredItem<SculkHornItem> SCULK_HORN = ITEMS.register("sculk_horn",
             () -> new SculkHornItem(new Item.Properties().rarity(Rarity.UNCOMMON)));
+            
+    public static final DeferredItem<Item> SCULK_UPGRADE = ITEMS.register("sculk_upgrade",
+            () -> new Item(new Item.Properties().rarity(Rarity.RARE).stacksTo(64)));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
