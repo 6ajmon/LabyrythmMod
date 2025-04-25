@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
@@ -42,6 +43,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -645,7 +647,7 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
                 .add(Attributes.FOLLOW_RANGE, VIBRATION_DETECTION_RANGE)
                 .add(Attributes.ARMOR, 6.0D)
                 .add(Attributes.ARMOR_TOUGHNESS, 6.0D)
-                .add(Attributes.SCALE, 1.24D)
+                .add(Attributes.SCALE, 1.1D)
                 .add(Attributes.JUMP_STRENGTH, 2.0D)
                 .add(Attributes.STEP_HEIGHT, 1.0D);
     }
@@ -806,7 +808,20 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
 
     @Override
     public void die(DamageSource damageSource) {
-        super.die(damageSource);
+        if (!this.level().isClientSide()) {
+
+            String dimensionKey = this.level().dimension().location().toString();
+
+            DEFEATED_MINOTAURS.computeIfAbsent(dimensionKey, k -> new HashSet<>()).add(this.getUUID());
+ 
+            this.level().playSound(null, this.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE,
+                    SoundSource.HOSTILE, 1.0F, 1.0F);
+ 
+            // Drop 2 Sculk Horns when killed
+            this.spawnAtLocation(com.github.sajmon.labyrythm.item.ModItems.SCULK_HORN.get());
+            this.spawnAtLocation(com.github.sajmon.labyrythm.item.ModItems.SCULK_HORN.get()); 
+
+        }
     }
 
     @Override
