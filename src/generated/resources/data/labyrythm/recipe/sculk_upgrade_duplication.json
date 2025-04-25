@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "U": {
+      "item": "labyrythm:sculk_upgrade"
+    }
+  },
+  "pattern": [
+    "DUD",
+    "DDD",
+    "DDD"
+  ],
+  "result": {
+    "count": 2,
+    "id": "labyrythm:sculk_upgrade"
+  }
+}

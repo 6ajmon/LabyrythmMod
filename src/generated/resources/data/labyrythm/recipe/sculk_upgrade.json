@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "H": {
+      "item": "labyrythm:sculk_horn"
+    }
+  },
+  "pattern": [
+    "DHD",
+    "DDD",
+    "DDD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "labyrythm:sculk_upgrade"
+  }
+}

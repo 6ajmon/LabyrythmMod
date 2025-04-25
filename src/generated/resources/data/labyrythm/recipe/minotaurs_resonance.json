@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:smithing_transform",
+  "addition": {
+    "item": "minecraft:echo_shard"
+  },
+  "base": {
+    "item": "minecraft:diamond_axe"
+  },
+  "result": {
+    "count": 1,
+    "id": "labyrythm:minotaurs_resonance"
+  },
+  "template": {
+    "item": "labyrythm:sculk_upgrade"
+  }
+}

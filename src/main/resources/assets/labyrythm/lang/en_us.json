@@ -3,5 +3,22 @@
   "item.labyrythm.minotaurs_resonance": "Minotaur's Resonance",
   "item.labyrythm.minotaurs_resonance.tooltip": "The axe of the fallen Minotaur lord.",
   "item.labyrythm.minotaurs_resonance.tooltip2": "Contains the power of the labyrinth.",
-  "itemGroup.labyrythm.main_tab": "Labyrythm"
+  "item.labyrythm.sculk_horn": "Sculk Horn",
+  "item.labyrythm.sculk_upgrade": "Sculk Upgrade",
+  "itemGroup.labyrythm.main_tab": "Labyrythm",
+  
+  "item.minecraft.potion.effect.darkness": "Potion of Darkness",
+  "item.minecraft.splash_potion.effect.darkness": "Splash Potion of Darkness",
+  "item.minecraft.lingering_potion.effect.darkness": "Lingering Potion of Darkness",
+  "item.minecraft.tipped_arrow.effect.darkness": "Arrow of Darkness",
+  
+  "item.minecraft.potion.effect.long_darkness": "Potion of Darkness",
+  "item.minecraft.splash_potion.effect.long_darkness": "Splash Potion of Darkness",
+  "item.minecraft.lingering_potion.effect.long_darkness": "Lingering Potion of Darkness",
+  "item.minecraft.tipped_arrow.effect.long_darkness": "Arrow of Darkness",
+  
+  "item.minecraft.potion.effect.lingering_darkness": "Lingering Potion of Darkness",
+  "item.minecraft.splash_potion.effect.lingering_darkness": "Splash Potion of Darkness",
+  "item.minecraft.lingering_potion.effect.lingering_darkness": "Lingering Potion of Darkness",
+  "item.minecraft.tipped_arrow.effect.lingering_darkness": "Arrow of Darkness"
 }

@@ -5,13 +5,17 @@ import org.slf4j.Logger;
 import com.github.sajmon.labyrythm.item.ModCreativeTabs;
 import com.mojang.logging.LogUtils;
 import com.github.sajmon.labyrythm.item.ModItems;
+import com.github.sajmon.labyrythm.potion.ModPotions;
 import com.github.sajmon.labyrythm.structures.ModStructures;
 import com.github.sajmon.labyrythm.structures.pieces.ModStructurePieces;
 import com.github.sajmon.labyrythm.entity.ModEntityTypes;
 import com.github.sajmon.labyrythm.entity.MinotaurEntity;
 import com.github.sajmon.labyrythm.entity.ModActivities;
 import com.github.sajmon.labyrythm.event.ModEvents;
+import com.github.sajmon.labyrythm.brewing.ModBrewingRecipes;
 
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -46,6 +50,7 @@ public class Labyrythm
         
         ModItems.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
+        ModPotions.register(modEventBus); // Register potions
         
         ModStructures.register(modEventBus);
         ModStructurePieces.register(modEventBus);
@@ -56,6 +61,8 @@ public class Labyrythm
     private void commonSetup(final FMLCommonSetupEvent event)
     {
         event.enqueueWork(() -> {
+            // Register brewing recipes
+            ModBrewingRecipes.register();
         });
     }
 
