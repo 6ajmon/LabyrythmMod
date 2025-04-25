@@ -6,8 +6,6 @@ import com.github.sajmon.labyrythm.client.model.ModModelLayers;
 import com.github.sajmon.labyrythm.client.renderer.MinotaurRenderer;
 import com.github.sajmon.labyrythm.entity.ModEntityTypes;
 
-import net.minecraft.client.model.geom.builders.CubeDeformation;
-import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;

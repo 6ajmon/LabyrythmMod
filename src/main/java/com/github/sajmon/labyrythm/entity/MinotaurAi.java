@@ -3,7 +3,6 @@ package com.github.sajmon.labyrythm.entity;
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Dynamic;
-import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
@@ -21,7 +20,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class MinotaurAi {
-    private static final Logger LOGGER = LogUtils.getLogger();
     private static final float PATROL_WALK_SPEED = MinotaurEntity.PATROL_WALK_SPEED;
     private static final float INVESTIGATE_WALK_SPEED = MinotaurEntity.INVESTIGATE_WALK_SPEED;
     private static final float CHASE_WALK_SPEED = MinotaurEntity.CHASE_WALK_SPEED;

@@ -16,14 +16,10 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
 
     @Override
     protected void generate() {
-        // TODO: Implement block loot tables
-        // Example: dropSelf(ModBlocks.YOUR_BLOCK.get());
     }
 
     @Override
     protected Iterable<Block> getKnownBlocks() {
-        // TODO: Return an iterable of your mod's blocks
-        // Example: return ModBlocks.BLOCKS.getEntries().stream().map(Supplier::get)::iterator;
         return Collections.emptyList();
     }
 }

@@ -14,9 +14,5 @@ public class ModGlobalLootModifierProvider extends GlobalLootModifierProvider {
 
     @Override
     protected void start() {
-        // TODO: Implement global loot modifiers
-        // Example: add("your_modifier_name", new YourLootModifier(
-        //     new LootItemCondition[] { ... }, YourItem.get()
-        // ));
     }
 }

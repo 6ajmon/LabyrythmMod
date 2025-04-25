@@ -12,7 +12,6 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.structure.StructureType;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder;
 import net.minecraft.core.HolderSet;
-import net.minecraft.world.level.levelgen.Heightmap;
 
 
 public class MinotaursLabyrinth extends LabyrythmStructure {

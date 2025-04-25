@@ -1,7 +1,6 @@
 package com.github.sajmon.labyrythm.datagen;
 
 import com.github.sajmon.labyrythm.Labyrythm;
-import com.github.sajmon.labyrythm.item.ModItems;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -17,12 +16,6 @@ public class ModItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
-        // TODO: Register item models
-        // Example: simpleItem(ModItems.YOUR_ITEM);
-        // You might need to manually handle existing items if they don't follow the simple pattern
-        // simpleItem(ModItems.MINOTAURS_RESONANCE); // Assuming handheld
-        // simpleItem(ModItems.SCULK_HORN);
-        // simpleItem(ModItems.SCULK_UPGRADE);
     }
 
     private ItemModelBuilder simpleItem(DeferredHolder<Item, ? extends Item> item) {
@@ -31,7 +24,6 @@ public class ModItemModelProvider extends ItemModelProvider {
                 ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "item/" + item.getId().getPath()));
     }
 
-    // Add other helper methods like handheldItem if needed
     private ItemModelBuilder handheldItem(DeferredHolder<Item, ? extends Item> item) {
         return withExistingParent(item.getId().getPath(),
                 ResourceLocation.withDefaultNamespace("item/handheld")).texture("layer0",

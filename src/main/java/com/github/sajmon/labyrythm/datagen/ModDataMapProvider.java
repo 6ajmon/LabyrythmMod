@@ -13,7 +13,5 @@ public class ModDataMapProvider extends DataMapProvider {
 
     @Override
     protected void gather() {
-        // TODO: Implement data maps if needed
-        // Example: builder(YourDataMaps.YOUR_MAP).add(YourRegistries.YOUR_ENTRY, YourData.INSTANCE, false);
     }
 }

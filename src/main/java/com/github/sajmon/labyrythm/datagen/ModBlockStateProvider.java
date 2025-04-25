@@ -14,8 +14,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        // TODO: Register block states and models
-        // Example: blockWithItem(ModBlocks.YOUR_BLOCK);
     }
 
     private void blockWithItem(DeferredHolder<Block, ? extends Block> blockRegistryObject) {

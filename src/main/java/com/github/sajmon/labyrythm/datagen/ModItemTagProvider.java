@@ -17,7 +17,5 @@ public class ModItemTagProvider extends ItemTagsProvider {
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
-        // TODO: Implement item tags
-        // Example: this.tag(ItemTags.TRIMMABLE_ARMOR).add(ModItems.YOUR_ARMOR_ITEM.get());
     }
 }
