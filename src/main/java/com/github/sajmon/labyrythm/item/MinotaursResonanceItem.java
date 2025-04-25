@@ -101,6 +101,8 @@ public class MinotaursResonanceItem extends AxeItem {
         // Execute the dash
         performDash(level, player, dashForce);
         
+        stack.hurtAndBreak(6, player, LivingEntity.getSlotForHand(player.getUsedItemHand()));
+
         // Set cooldown
         player.getCooldowns().addCooldown(this, DASH_COOLDOWN_TICKS);
         

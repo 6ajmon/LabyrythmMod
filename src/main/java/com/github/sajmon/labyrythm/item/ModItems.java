@@ -18,7 +18,7 @@ public class ModItems {
             () -> new MinotaursResonanceItem(
                     ModTiers.SCULK,
                     new Item.Properties().
-                    attributes(AxeItem.createAttributes(ModTiers.SCULK, 5, -3.0f))
+                    attributes(AxeItem.createAttributes(ModTiers.SCULK, 4, -3.0f))
             ));
 
     public static void register(IEventBus eventBus) {
