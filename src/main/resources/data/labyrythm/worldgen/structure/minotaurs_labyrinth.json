@@ -1,11 +1,11 @@
 {
   "type": "labyrythm:minotaurs_labyrinth",
-  "biomes": "#labyrythm:has_structure/minotaurs_labyrinth",
-  "step": "surface_structures",
-  "terrain_adaptation": "none",
+  "biomes": "#minecraft:is_overworld",
+  "step": "underground_structures",
+  "terrain_adaptation": "beard_box",
   "spawn_overrides": {},
-  "allowed_biomes": "#labyrythm:has_structure/minotaurs_labyrinth",
-  "check_height": true,
+  "allowed_biomes": "#minecraft:is_overworld",
+  "check_height": false,
   "avoid_water": true,
   "avoid_structures": true,
   "size": 81

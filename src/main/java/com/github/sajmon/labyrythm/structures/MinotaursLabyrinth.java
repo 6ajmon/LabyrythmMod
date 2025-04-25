@@ -53,18 +53,18 @@ public class MinotaursLabyrinth extends LabyrythmStructure {
                 (chunkPos.z << 4) + 7
         );
 
-        int surfaceHeight = context.chunkGenerator().getBaseHeight(
-                centerPos.getX(),
-                centerPos.getZ(),
-                Heightmap.Types.WORLD_SURFACE_WG,
-                context.heightAccessor(),
-                context.randomState()
-        );
-
-        centerPos = new BlockPos(centerPos.getX(), surfaceHeight, centerPos.getZ());
+        // Get the minimum and maximum height for the current world
+        int minY = context.heightAccessor().getMinBuildHeight();
+        int maxY = context.heightAccessor().getMaxBuildHeight();
+        
+        // Calculate a depth that's approximately 20-40% up from the bottom of the world
+        // This places it in deep underground but not at bedrock level
+        int range = maxY - minY;
+        int undergroundHeight = minY + 10 + context.random().nextInt(Math.max(1, (int)(range * 0.2)));
+        
+        centerPos = new BlockPos(centerPos.getX(), undergroundHeight, centerPos.getZ());
 
         RandomSource random = context.random();
-
         Rotation rotation = Rotation.getRandom(random);
 
         MinotaursLabyrinthPieces.addPieces(

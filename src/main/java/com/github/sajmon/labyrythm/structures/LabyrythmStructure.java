@@ -41,7 +41,9 @@ public abstract class LabyrythmStructure extends Structure {
     @Override
     public Optional<GenerationStub> findGenerationPoint(GenerationContext context) {
         if(this.checkLocation(context)) {
-            return onTopOfChunkCenter(context, Heightmap.Types.WORLD_SURFACE_WG, (builder) -> {
+            // Use onTopOfChunkCenter instead of the non-existent generalizeHeight
+            // The actual height calculation will be done in generatePieces
+            return Structure.onTopOfChunkCenter(context, Heightmap.Types.WORLD_SURFACE_WG, (builder) -> {
                 this.generatePieces(builder, context);
             });
         }
@@ -74,6 +76,6 @@ public abstract class LabyrythmStructure extends Structure {
 
     @Override
     public GenerationStep.Decoration step() {
-        return GenerationStep.Decoration.SURFACE_STRUCTURES;
+        return GenerationStep.Decoration.UNDERGROUND_STRUCTURES;
     }
 }

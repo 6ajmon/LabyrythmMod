@@ -8,15 +8,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
@@ -34,7 +31,6 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.DynamicGameEventListener;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -46,7 +42,6 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -100,12 +95,6 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
 
     private static final Map<String, Set<UUID>> DEFEATED_MINOTAURS = new HashMap<>();
 
-    private final ServerBossEvent bossEvent = new ServerBossEvent(
-            Component.translatable("entity.labyrythm.minotaur.boss_name"),
-            BossEvent.BossBarColor.RED,
-            BossEvent.BossBarOverlay.PROGRESS
-    );
-
     private static final int MAX_ATTACK_TIME = 15;
     private boolean attackAnimationStarted = false;
 
@@ -114,12 +103,9 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
 
     public MinotaurEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
-        this.xpReward = 20;
-
-        this.bossEvent.setDarkenScreen(false);
-        this.bossEvent.setCreateWorldFog(false);
-        
-        this.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_AXE));
+        this.xpReward = 50;
+        this.attackAnimationStarted = false;
+        this.attackAnim = 0.0F;
     }
 
     @Override
@@ -206,10 +192,6 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
 
         if (!level.isClientSide()) {
             verifyAndRestoreAxe();
-        }
-
-        if (!level.isClientSide()) {
-            this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
         }
 
         if (!level.isClientSide() && this.getTarget() != null && !this.getTarget().isAlive()) {
@@ -815,32 +797,15 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     @Override
     public void startSeenByPlayer(ServerPlayer player) {
         super.startSeenByPlayer(player);
-        this.bossEvent.addPlayer(player);
     }
 
     @Override
     public void stopSeenByPlayer(ServerPlayer player) {
         super.stopSeenByPlayer(player);
-        this.bossEvent.removePlayer(player);
     }
 
     @Override
     public void die(DamageSource damageSource) {
-        if (!this.level().isClientSide()) {
-            String dimensionKey = this.level().dimension().location().toString();
-            DEFEATED_MINOTAURS.computeIfAbsent(dimensionKey, k -> new HashSet<>()).add(this.getUUID());
-
-            this.level().playSound(null, this.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE,
-                    SoundSource.HOSTILE, 1.0F, 1.0F);
-
-            // Drop 2 Sculk Horns when killed
-            this.spawnAtLocation(com.github.sajmon.labyrythm.item.ModItems.SCULK_HORN.get());
-            this.spawnAtLocation(com.github.sajmon.labyrythm.item.ModItems.SCULK_HORN.get());
-            
-
-            this.bossEvent.setVisible(false);
-        }
-
         super.die(damageSource);
     }
 
