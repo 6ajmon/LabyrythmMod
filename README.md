@@ -16,7 +16,7 @@ Those brave enough to explore the labyrinth and confront the Minotaur can discov
 
 ## Key Features
 
-* **Minotaur's Labyrinth:** A new, procedurally generated surface structure themed after the Deep Dark and Ancient Cities.
+* **Minotaur's Labyrinth:** A new, procedurally generated underground structure themed after the Deep Dark and Ancient Cities.
 * **The Minotaur:** A challenging new boss that is blind and reacts to sounds made by the player.
 * **Sound-Based Gameplay:** Navigate the sculk-infested labyrinth carefully to avoid attracting the Minotaur.
 * **New Loot:** Discover powerful items, including the Minotaur's Axe, within the labyrinth's chests and as a reward for defeating the boss.
