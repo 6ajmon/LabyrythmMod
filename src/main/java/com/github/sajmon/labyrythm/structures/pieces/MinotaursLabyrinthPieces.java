@@ -37,6 +37,7 @@ public class MinotaursLabyrinthPieces {
     private static final ResourceLocation END_CHEST_1 = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_chest_1");
     private static final ResourceLocation END_CHEST_2 = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_chest_2");
     private static final ResourceLocation END_CHEST_3 = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_end_chest_3");
+    private static final ResourceLocation WELL = ResourceLocation.fromNamespaceAndPath(Labyrythm.MOD_ID, "minotaur_labyrinth/ml_well");
     
     private static final int PIECE_SIZE = 7;
     
@@ -54,6 +55,7 @@ public class MinotaursLabyrinthPieces {
         PIECE_CONNECTIONS.put(END_CHEST_1, EnumSet.of(Direction.EAST));
         PIECE_CONNECTIONS.put(END_CHEST_2, EnumSet.of(Direction.EAST));
         PIECE_CONNECTIONS.put(END_CHEST_3, EnumSet.of(Direction.EAST));
+        PIECE_CONNECTIONS.put(WELL, EnumSet.of(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST));
     }
 
     public static void addPieces(StructurePiecesBuilder builder, BlockPos centerPos, Rotation initialRotation,
@@ -62,6 +64,24 @@ public class MinotaursLabyrinthPieces {
         
         int mazeSize = Math.max(5, (int)Math.sqrt(configSize));
         if (mazeSize % 2 == 0) mazeSize++;
+        
+        // Add the well at the top level, above the highest entrance
+        BlockPos wellPos = new BlockPos(
+            centerPos.getX(),
+            centerPos.getY() + 7, // Place it 7 blocks above the center (one level up)
+            centerPos.getZ()
+        );
+        
+        // Add the well with a random rotation
+        Rotation wellRotation = Rotation.values()[random.nextInt(Rotation.values().length)];
+        LabyrinthPiece wellPiece = new LabyrinthPiece(
+            templateManager,
+            WELL,
+            wellPos,
+            wellRotation,
+            0
+        );
+        builder.addPiece(wellPiece);
         
         for (int level = 0; level < levels; level++) {
             int yOffset = -level * 7;
