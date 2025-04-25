@@ -1,5 +1,7 @@
 package com.github.sajmon.labyrythm.entity;
 
+import com.github.sajmon.labyrythm.client.animation.AnimationLoader;
+import com.github.sajmon.labyrythm.item.MinotaursResonanceItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
@@ -18,6 +20,8 @@ import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -49,8 +53,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
-
-import com.github.sajmon.labyrythm.client.animation.AnimationLoader;
 
 public class MinotaurEntity extends Monster implements NeutralMob, VibrationSystem {
     private static final EntityDataAccessor<Integer> ANGER_LEVEL = SynchedEntityData.defineId(MinotaurEntity.class, EntityDataSerializers.INT);
@@ -458,8 +460,16 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
         
         boolean result = super.doHurtTarget(entity);
         
-        if (result) {
+        if (result && entity instanceof LivingEntity livingTarget) {
             this.playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 1.0F, 0.8F + this.random.nextFloat() * 0.4F);
+            
+            // Apply darkness effect if the Minotaur is holding Minotaur's Resonance
+            ItemStack weapon = this.getMainHandItem();
+            if (weapon.getItem() instanceof MinotaursResonanceItem) {
+                livingTarget.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 120, 0, false, true));
+                livingTarget.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 120, 1, false, true));
+
+            }
         }
         
         return result;
