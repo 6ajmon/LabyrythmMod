@@ -20,7 +20,7 @@ public class ModItems {
                     ModTiers.SCULK,
                     new Item.Properties()
                     .rarity(Rarity.RARE)
-                    .attributes(AxeItem.createAttributes(ModTiers.SCULK, 4, -3.0f))
+                    .attributes(AxeItem.createAttributes(ModTiers.SCULK, 5, -3.0f))
             ));
             
     public static final DeferredItem<SculkHornItem> SCULK_HORN = ITEMS.register("sculk_horn",

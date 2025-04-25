@@ -672,6 +672,7 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     protected void populateDefaultEquipmentSlots(RandomSource random, DifficultyInstance difficulty) {
         super.populateDefaultEquipmentSlots(random, difficulty);
         this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(com.github.sajmon.labyrythm.item.ModItems.MINOTAURS_RESONANCE.get()));
+        this.setGuaranteedDrop(EquipmentSlot.MAINHAND);
     }
     
     @Override
@@ -832,10 +833,10 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
             this.level().playSound(null, this.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE,
                     SoundSource.HOSTILE, 1.0F, 1.0F);
 
-            // Drop Minotaur's Resonance when killed
-            if (damageSource.getEntity() instanceof Player player) {
-                this.spawnAtLocation(com.github.sajmon.labyrythm.item.ModItems.MINOTAURS_RESONANCE.get());
-            }
+            // Drop 2 Sculk Horns when killed
+            this.spawnAtLocation(com.github.sajmon.labyrythm.item.ModItems.SCULK_HORN.get());
+            this.spawnAtLocation(com.github.sajmon.labyrythm.item.ModItems.SCULK_HORN.get());
+            
 
             this.bossEvent.setVisible(false);
         }
