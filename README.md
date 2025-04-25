@@ -49,7 +49,7 @@ Those brave enough to explore the labyrinth and confront the Minotaur can discov
 ## Installation
 
 1.  Ensure you have **Neoforge for Minecraft 1.21.1** installed.
-2.  Download the latest `Labyrythm-[version].jar` file from the [Releases Page](LINK_TO_RELEASES_PAGE).
+2.  Download the latest `Labyrythm-[version].jar` file from the [Releases Page](https://github.com/6ajmon/LabyrythmMod/releases).
 3.  Place the downloaded `.jar` file into your Minecraft `mods` folder.
 4.  Launch Minecraft using the Neoforge profile.
 
