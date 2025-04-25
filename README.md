@@ -25,15 +25,20 @@ Those brave enough to explore the labyrinth and confront the Minotaur can discov
 
 ### Minotaur's Labyrinth Structure
 
-![Image placeholder for the Labyrinth structure](URL_TO_STRUCTURE_SCREENSHOT_HERE)
+![2025-04-25_20 06 22](https://github.com/user-attachments/assets/a3c6d9de-a698-484d-913d-55bc539f95c1)
+![2025-04-25_20 07 30](https://github.com/user-attachments/assets/f098d04b-0f1a-4eee-b65d-d918a3e92cc0)
+
+
 
 ### The Minotaur Boss
 
-![Image placeholder for the Minotaur boss](URL_TO_BOSS_SCREENSHOT_HERE)
+![2025-04-25_20 08 33](https://github.com/user-attachments/assets/01c845be-c094-4f11-9692-430ff97415f3)
+
 
 ### New Items
 
-![Image placeholder for the new items](URL_TO_ITEMS_SCREENSHOT_HERE)
+![2025-04-25_20 18 03](https://github.com/user-attachments/assets/20856841-5c8e-4f22-a9a9-d9019b9017e3)
+
 
 ## Video Showcase
 
