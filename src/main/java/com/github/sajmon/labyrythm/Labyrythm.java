@@ -10,6 +10,7 @@ import com.github.sajmon.labyrythm.structures.pieces.ModStructurePieces;
 import com.github.sajmon.labyrythm.entity.ModEntityTypes;
 import com.github.sajmon.labyrythm.entity.MinotaurEntity;
 import com.github.sajmon.labyrythm.entity.ModActivities;
+import com.github.sajmon.labyrythm.event.ModEvents;
 
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.api.distmarker.Dist;
@@ -38,7 +39,7 @@ public class Labyrythm
         modEventBus.addListener(this::registerAttributes);
 
         NeoForge.EVENT_BUS.register(this);
-        NeoForge.EVENT_BUS.register(com.github.sajmon.labyrythm.event.ModEvents.class);
+        NeoForge.EVENT_BUS.register(ModEvents.class);
         
         ModEntityTypes.register(modEventBus);
         ModActivities.register(modEventBus);
