@@ -44,7 +44,7 @@ Those brave enough to explore the labyrinth and confront the Minotaur can discov
 
 **Watch the Mod in Action:**
 
-[Link](youtube)
+https://youtu.be/N98sAmkVesY
 
 ## Installation
 
