@@ -2,6 +2,7 @@ package com.github.sajmon.labyrythm;
 
 import org.slf4j.Logger;
 
+import com.github.sajmon.labyrythm.item.ModCreativeTabs;
 import com.mojang.logging.LogUtils;
 import com.github.sajmon.labyrythm.item.ModItems;
 import com.github.sajmon.labyrythm.structures.ModStructures;
@@ -43,11 +44,10 @@ public class Labyrythm
         ModActivities.register(modEventBus);
         
         ModItems.register(modEventBus);
+        ModCreativeTabs.register(modEventBus);
         
         ModStructures.register(modEventBus);
         ModStructurePieces.register(modEventBus);
-
-        modEventBus.addListener(this::addCreative);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
@@ -56,13 +56,6 @@ public class Labyrythm
     {
         event.enqueueWork(() -> {
         });
-    }
-
-    private void addCreative(BuildCreativeModeTabContentsEvent event)
-    {
-        if(event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
-            event.accept(ModItems.BISMUTH);
-        }
     }
 
     @SubscribeEvent

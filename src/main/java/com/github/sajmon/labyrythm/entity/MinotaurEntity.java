@@ -350,8 +350,8 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
 
     private void verifyAndRestoreAxe() {
         ItemStack mainHandItem = this.getItemBySlot(EquipmentSlot.MAINHAND);
-        if (mainHandItem.isEmpty() || !mainHandItem.is(Items.IRON_AXE)) {
-            this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_AXE));
+        if (mainHandItem.isEmpty() || !mainHandItem.is(com.github.sajmon.labyrythm.item.ModItems.MINOTAURS_RESONANCE.get().asItem())) {
+            this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(com.github.sajmon.labyrythm.item.ModItems.MINOTAURS_RESONANCE.get()));
         }
     }
 
@@ -359,7 +359,7 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     public ItemStack getMainHandItem() {
         ItemStack mainHandItem = super.getMainHandItem();
         if (mainHandItem.isEmpty()) {
-            return new ItemStack(Items.IRON_AXE);
+            return new ItemStack(com.github.sajmon.labyrythm.item.ModItems.MINOTAURS_RESONANCE.get());
         }
         return mainHandItem;
     }
@@ -661,7 +661,7 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
     @Override
     protected void populateDefaultEquipmentSlots(RandomSource random, DifficultyInstance difficulty) {
         super.populateDefaultEquipmentSlots(random, difficulty);
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_AXE));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(com.github.sajmon.labyrythm.item.ModItems.MINOTAURS_RESONANCE.get()));
     }
     
     @Override
@@ -821,6 +821,11 @@ public class MinotaurEntity extends Monster implements NeutralMob, VibrationSyst
 
             this.level().playSound(null, this.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE,
                     SoundSource.HOSTILE, 1.0F, 1.0F);
+
+            // Drop Minotaur's Resonance when killed
+            if (damageSource.getEntity() instanceof Player player) {
+                this.spawnAtLocation(com.github.sajmon.labyrythm.item.ModItems.MINOTAURS_RESONANCE.get());
+            }
 
             this.bossEvent.setVisible(false);
         }

@@ -1,6 +1,7 @@
 {
-  "itemGroup.labyrythm": "Example Mod Tab",
-  "block.labyrythm.example_block": "Example Block",
-  "item.labyrythm.bismuth": "Bismuth",
-  "entity.labyrythm.minotaur.boss_name": "The Minotaur of the Labyrinth"
+  "entity.labyrythm.minotaur.boss_name": "The Minotaur of the Labyrinth",
+  "item.labyrythm.minotaurs_resonance": "Minotaur's Resonance",
+  "item.labyrythm.minotaurs_resonance.tooltip": "The axe of the fallen Minotaur lord.",
+  "item.labyrythm.minotaurs_resonance.tooltip2": "Contains the power of the labyrinth.",
+  "itemGroup.labyrythm.main_tab": "Labyrythm"
 }
