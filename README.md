@@ -56,7 +56,7 @@ https://youtu.be/N98sAmkVesY
 or
 
 Download from/using:
-- [Curseforge](Curseforge)
+- [Curseforge](https://www.curseforge.com/minecraft/mc-mods/labyrythm)
 - [Modrinth](https://modrinth.com/mod/labyrythm)
 
 ## About
