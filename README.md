@@ -46,6 +46,7 @@ Those brave enough to explore the labyrinth and confront the Minotaur can discov
 
 https://youtu.be/N98sAmkVesY
 [![Watch the video](https://img.youtube.com/vi/N98sAmkVesY/maxresdefault.jpg)](https://youtu.be/N98sAmkVesY)
+(turn on the subtitles!)
 
 ## Installation
 
