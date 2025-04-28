@@ -1,0 +1,17 @@
+{
+    "attributes": {
+      "range_bonus": -0.25,
+      "category": "axe",
+      "attacks": [
+        {
+          "hitbox": "VERTICAL_PLANE",
+          "angle": 90,
+          "upswing": 0.5,
+          "animation": "bettercombat:one_handed_slam",
+          "swing_sound": {
+            "id": "bettercombat:axe_slash"
+          }
+        }
+      ]
+    }
+  }
