@@ -10,15 +10,24 @@
   "item.minecraft.potion.effect.darkness": "Potion of Darkness",
   "item.minecraft.splash_potion.effect.darkness": "Splash Potion of Darkness",
   "item.minecraft.lingering_potion.effect.darkness": "Lingering Potion of Darkness",
-  "item.minecraft.tipped_arrow.effect.darkness": "Arrow of Darkness",
   
   "item.minecraft.potion.effect.long_darkness": "Potion of Darkness",
   "item.minecraft.splash_potion.effect.long_darkness": "Splash Potion of Darkness",
   "item.minecraft.lingering_potion.effect.long_darkness": "Lingering Potion of Darkness",
-  "item.minecraft.tipped_arrow.effect.long_darkness": "Arrow of Darkness",
   
   "item.minecraft.potion.effect.lingering_darkness": "Lingering Potion of Darkness",
   "item.minecraft.splash_potion.effect.lingering_darkness": "Splash Potion of Darkness",
   "item.minecraft.lingering_potion.effect.lingering_darkness": "Lingering Potion of Darkness",
-  "item.minecraft.tipped_arrow.effect.lingering_darkness": "Arrow of Darkness"
+
+  "advancements.labyrythm.root.title": "Labyrythm",
+  "advancements.labyrythm.root.description": "Enter the Minotaur's Labyrinth",
+  
+  "advancements.labyrythm.defeat_minotaur.title": "Maze Conqueror",
+  "advancements.labyrythm.defeat_minotaur.description": "Defeat the fearsome Minotaur guarding the labyrinth",
+  
+  "advancements.labyrythm.obtain_resonance.title": "Resonant Power",
+  "advancements.labyrythm.obtain_resonance.description": "Claim the Minotaur's Resonance as your prize",
+
+  "advancements.labyrythm.resummon_minotaur.title": "Round Two",
+  "advancements.labyrythm.resummon_minotaur.description": "Use a Sculk Horn on a Sculk Catalyst to bring back the Minotaur for another challenge"
 }
