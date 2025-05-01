@@ -17,7 +17,10 @@ version = mod_version
 group = mod_group_id
 
 repositories {
-    mavenLocal()
+    maven {
+    name = "Illusive Soulworks maven"
+    url = "https://maven.theillusivec4.top/"
+  }
 }
 
 base {
@@ -133,6 +136,11 @@ dependencies {
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+
+    // // Compile against only the API artifact
+    // compileOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}:api"
+    // // Use the full Curios API jar at runtime
+    // runtimeOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}"
 }
 
 processResources {

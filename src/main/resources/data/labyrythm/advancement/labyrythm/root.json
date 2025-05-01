@@ -1,0 +1,36 @@
+{
+  "criteria": {
+    "entered_labyrinth": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "labyrythm:minotaurs_labyrinth"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "announce_to_chat": true,
+    "background": "labyrythm:textures/block/sculk_background.png",
+    "description": {
+      "translate": "advancements.labyrythm.root.description"
+    },
+    "frame": "task",
+    "hidden": false,
+    "icon": {
+      "id": "minecraft:sculk"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "advancements.labyrythm.root.title"
+    }
+  }
+}

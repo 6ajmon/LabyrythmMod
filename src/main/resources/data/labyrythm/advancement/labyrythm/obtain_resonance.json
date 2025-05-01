@@ -1,0 +1,32 @@
+{
+  "parent": "labyrythm:labyrythm/defeat_minotaur",
+  "display": {
+    "icon": {
+      "id": "labyrythm:minotaurs_resonance"
+    },
+    "title": {
+      "translate": "advancements.labyrythm.obtain_resonance.title"
+    },
+    "description": {
+      "translate": "advancements.labyrythm.obtain_resonance.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "obtained_resonance": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "labyrythm:minotaurs_resonance"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  }
+}

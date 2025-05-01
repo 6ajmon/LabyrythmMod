@@ -1,0 +1,32 @@
+{
+  "parent": "labyrythm:labyrythm/root",
+  "display": {
+    "icon": {
+      "id": "labyrythm:sculk_horn"
+    },
+    "title": {
+      "translate": "advancements.labyrythm.defeat_minotaur.title"
+    },
+    "description": {
+      "translate": "advancements.labyrythm.defeat_minotaur.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "defeat_minotaur": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "labyrythm:sculk_horn"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

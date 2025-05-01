@@ -1,0 +1,38 @@
+{
+    "parent": "labyrythm:labyrythm/defeat_minotaur",
+    "display": {
+      "icon": {
+        "id": "minecraft:sculk_catalyst",
+        "nbt": "{Enchantments:[{}]}"
+      },
+      "title": {
+        "translate": "advancements.labyrythm.resummon_minotaur.title"
+      },
+      "description": {
+        "translate": "advancements.labyrythm.resummon_minotaur.description"
+      },
+      "frame": "goal",
+      "show_toast": true,
+      "announce_to_chat": true,
+      "hidden": false
+    },
+    "criteria": {
+      "resummon_minotaur": {
+        "trigger": "minecraft:item_used_on_block",
+        "conditions": {
+          "location": {
+            "block": {
+              "blocks": [
+                "minecraft:sculk_catalyst"
+              ]
+            }
+          },
+          "item": {
+            "items": [
+              "labyrythm:sculk_horn"
+            ]
+          }
+        }
+      }
+    }
+  }
