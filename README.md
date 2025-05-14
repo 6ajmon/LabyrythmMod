@@ -63,7 +63,7 @@ Download from/using:
 
 ## About
 
-This mod was created as an entry for the Minecraft Modding Competition hosted by the Koło Naukowe Informatyków UMK (Nicolaus Copernicus University in Toruń Computer Science Student's Association).
+This mod was created as an entry and won the Minecraft Modding Competition hosted by the Koło Naukowe Informatyków UMK (Nicolaus Copernicus University in Toruń Computer Science Student's Association).
 
 ## Compatibility
 
